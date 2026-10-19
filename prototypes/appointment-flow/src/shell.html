@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>Appointment Flow Prototype</title>
+<!--LIBHEAD-->
+<style>
+  html, body { height: 100%; overflow: hidden; background: #f9fafb; }
+  #stage { height: calc(100vh - 56px); padding: 12px; }
+  #app { height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; }
+  #day { flex: 1; min-height: 0; overflow: auto; }
+  #lib-overlay { position: fixed; inset: 0; z-index: 60; background: rgb(17 24 39 / .35); display: flex; align-items: flex-start; justify-content: center; padding: 56px 16px 16px; overflow: auto; }
+  .sheet { top: 57px !important; }  /* the library's side panel sits under this page's top bar */
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body class="font-sans text-gray-800">
+  <div class="sticky top-0 z-[55] bg-white/95 backdrop-blur border-b border-gray-200/80">
+    <div class="px-4 h-14 flex items-center gap-3">
+      <p class="text-sm font-semibold text-gray-900 whitespace-nowrap">Appointment flow prototype</p>
+      <span class="text-gray-300">·</span>
+      <label class="flex items-center gap-2 text-[13px] text-gray-600 min-w-0"><span class="whitespace-nowrap">Scenario</span>
+        <select id="scenario" class="h-8 min-w-0 max-w-[460px] rounded-lg border border-gray-200 bg-white px-2 text-[13px] text-gray-800 shadow-2xs"></select></label>
+      <span id="scenario-hint" class="hidden xl:inline text-[13px] text-gray-500 truncate"></span>
+      <span class="grow"></span>
+      <div id="flyout-switch" class="shrink-0"></div>
+    </div>
+  </div>
+  <div id="stage"><div id="app"></div></div>
+  <div id="lib-overlay" hidden></div>
+<!--SCRIPTS-->
+<script>PROTO.init();</script>
+</body>
+</html>

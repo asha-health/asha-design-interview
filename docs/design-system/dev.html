@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>Asha design blend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+  @theme { --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif; }
+</style>
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; background: #fff; color: #1e2939; }
+  .cbx { appearance: none; -webkit-appearance: none; background-position: center; background-repeat: no-repeat; }
+  .cbx:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5'/%3E%3C/svg%3E"); }
+  .cbx:indeterminate { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.25' stroke-linecap='round'%3E%3Cpath d='M4.5 8h7'/%3E%3C/svg%3E"); }
+  .rad { appearance: none; -webkit-appearance: none; }
+  .rad:checked { background: radial-gradient(circle, #fff 0 3px, #155dfc 3.5px); border-color: #155dfc; }
+
+  /* Grid (Attio): opaque fills so the sticky first column never shows text through it */
+  .g-table { border-collapse: separate; border-spacing: 0; }
+  .g-table thead th { position: sticky; top: 0; z-index: 3; background: #fff; }
+  .g-table .g-sticky { position: sticky; left: 0; z-index: 2; background: #fff; }
+  .g-table thead th.g-sticky { z-index: 4; }
+  .g-row:hover > td { background: #f9fafb; }
+  .g-row[data-sel="1"] > td, .g-row[data-open="1"] > td { background: #f5f9ff; }
+  .g-cell[data-active="1"] { box-shadow: inset 0 0 0 2px #2b7fff; }
+  .g-sheet .g-cell { transition: box-shadow .1s ease; }
+  /* v4: every table in a panel is the compact data grid size, editable or not */
+  .v4 aside table:not(.g-table) :is(td, th) { height: 28px !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 8px !important; font-size: 13px !important; }
+  .g-sheet .g-cell[data-edit]:hover:not([data-active="1"]) { box-shadow: inset 0 0 0 1px #d1d5db; }
+  .g-arrow { opacity: 0; transition: opacity .12s ease, transform .15s var(--asha-ease); }
+  .g-row:hover .g-arrow, .g-cell[data-active="1"] .g-arrow, .g-arrow.g-arrow-on { opacity: 1; }
+  .g-arrow.g-arrow-open { opacity: 1; transform: rotate(180deg); }
+  .g-foot .g-addcalc { opacity: 0; transition: opacity .12s; }
+  .g-foot:hover .g-addcalc { opacity: 1; }
+  .g-wrap:focus-visible { outline: none; }
+  .g-table tfoot td { position: sticky; bottom: 0; z-index: 2; background: #fff; box-shadow: inset 0 1px 0 rgb(229 231 235 / .8); }
+  .g-table tfoot td.g-sticky { z-index: 4; }
+
+  /* Motion (asha-ui ashaMotion: press / enter / reveal / settle) */
+  @keyframes asha-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  @keyframes asha-reveal { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes asha-settle { 0% { background: rgb(219 234 254 / .9); } 100% { background: transparent; } }
+  .asha-enter { animation: asha-enter .2s ease-out both; }
+  .asha-reveal { animation: asha-reveal .15s ease-out both; }
+  .asha-settle { animation: asha-settle 1.2s ease-out 1; }
+  /* ---- Micro-interactions (one layer for every block). Durations: fast 100–160ms, standard 180–240ms. ---- */
+  :root { --asha-ease: cubic-bezier(.2,.8,.2,1); }
+  @keyframes asha-pop { from { opacity: 0; transform: translateY(-3px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes asha-chip-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+  @keyframes asha-check { 0% { transform: scale(.75); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+  @keyframes asha-row-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  @keyframes asha-glow { from { box-shadow: inset 0 0 0 999px rgb(219 234 254 / .85); } to { box-shadow: inset 0 0 0 999px rgb(219 234 254 / 0); } }
+  @keyframes asha-toast-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes asha-toast-out { to { opacity: 0; transform: translateY(6px); } }
+  @keyframes asha-fade { from { opacity: .35; } to { opacity: 1; } }
+  .asha-pop { animation: asha-pop .16s var(--asha-ease) both; transform-origin: top; }
+  .asha-chip-in { animation: asha-chip-in .16s var(--asha-ease) both; }
+  .asha-check-pop { animation: asha-check .18s var(--asha-ease); }
+  .asha-row-in > td { animation: asha-row-in .22s var(--asha-ease) both, asha-glow 1.2s ease-out .15s 1; }
+  .asha-glow, .asha-glow-cells > td { animation: asha-glow 1.2s ease-out 1; }
+  .asha-toast-in { animation: asha-toast-in .2s var(--asha-ease) both; }
+  .asha-toast-out { animation: asha-toast-out .15s ease-in both; }
+  .asha-fade { animation: asha-fade .2s ease-out both; }
+  .asha-ink { position: absolute; bottom: -1px; height: 2px; border-radius: 2px; background: #155dfc; transition: left .2s var(--asha-ease), width .2s var(--asha-ease); pointer-events: none; z-index: 2; }
+  .asha-thumb { position: absolute; top: 3px; bottom: 3px; border-radius: 6px; background: #fff; box-shadow: 0 1px 2px rgb(16 24 40 / .06); transition: left .2s var(--asha-ease), width .2s var(--asha-ease); pointer-events: none; z-index: 0; }
+  .asha-seg-host > * { position: relative; z-index: 1; }
+  .asha-gliding { border-color: transparent !important; background: transparent !important; box-shadow: none !important; }
+  .g-row > td { transition: background-color .12s ease; }
+  .g-cell { transition: box-shadow .08s ease; }
+  svg.lucide-chevron-down { transition: transform .16s var(--asha-ease); }
+  [aria-expanded="true"] > svg.lucide-chevron-down, [aria-expanded="true"] svg.lucide-chevron-down:last-child { transform: rotate(180deg); }
+  /* AI thinking (ported from main's CopilotThinkingMotion): shimmering phrase, bouncing dots, live ping, row wash */
+  @keyframes asha-gradient { 0% { background-position: 100% 50%; } 100% { background-position: -100% 50%; } }
+  @keyframes asha-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-3px); opacity: 1; } }
+  @keyframes asha-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+  @keyframes asha-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  @keyframes asha-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .asha-shimmer { background-image: linear-gradient(90deg, #1e2939 0%, #1e2939 35%, #2b7fff 50%, #1e2939 65%, #1e2939 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: asha-gradient 2.2s linear infinite; }
+  .asha-dot { display: inline-block; width: 4px; height: 4px; border-radius: 999px; background: #2b7fff; animation: asha-dot 1.05s ease-in-out infinite; }
+  .asha-dot:nth-child(2) { animation-delay: .175s; } .asha-dot:nth-child(3) { animation-delay: .35s; }
+  .asha-ping { animation: asha-ping 1.2s cubic-bezier(0,0,.2,1) infinite; }
+  .asha-breathe { animation: asha-breathe 1.6s ease-in-out infinite; }
+  .asha-wash { background-image: linear-gradient(90deg, rgb(239 246 255 / .95), rgb(239 246 255 / .4) 55%, transparent); }
+  .asha-sweep { position: relative; overflow: hidden; } .asha-sweep::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(255 255 255 / .55), transparent); animation: asha-sweep 1.8s ease-in-out infinite; }
+  html[data-motion="reduced"] .asha-shimmer { animation: none; color: #1e2939; background: none; } html[data-motion="reduced"] .asha-dot, html[data-motion="reduced"] .asha-ping, html[data-motion="reduced"] .asha-breathe { animation: none; } html[data-motion="reduced"] .asha-sweep::after { display: none; }
+  @media (prefers-reduced-motion: reduce) { .asha-shimmer { animation: none; color: #1e2939; background: none; } .asha-dot, .asha-ping, .asha-breathe { animation: none; } .asha-sweep::after { display: none; } }
+  .sheet { transform: translateX(104%); transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+  .sheet[data-open="1"] { transform: none; }
+  .bulk { transition: transform .18s cubic-bezier(.2,.8,.2,1), opacity .18s; }
+  /* Reduced motion keeps colour feedback (the save glow) and drops movement. The page's own switch
+   * (html[data-motion="reduced"]) previews it without changing the computer's setting. */
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .sheet, .bulk, .asha-ink, .asha-thumb, svg.lucide-chevron-down { transition: none !important; } .asha-enter, .asha-reveal, .asha-pop, .asha-chip-in, .asha-check-pop, .asha-toast-in, .asha-toast-out, .asha-fade { animation: none !important; } .asha-row-in > td { animation: asha-glow 1.2s ease-out 1 !important; } *:active { scale: none !important; } }
+  html[data-motion="reduced"] { scroll-behavior: auto; }
+  html[data-motion="reduced"] .sheet, html[data-motion="reduced"] .bulk, html[data-motion="reduced"] .asha-ink, html[data-motion="reduced"] .asha-thumb, html[data-motion="reduced"] svg.lucide-chevron-down { transition: none !important; } html[data-motion="reduced"] .asha-enter, html[data-motion="reduced"] .asha-reveal, html[data-motion="reduced"] .asha-pop, html[data-motion="reduced"] .asha-chip-in, html[data-motion="reduced"] .asha-check-pop, html[data-motion="reduced"] .asha-toast-in, html[data-motion="reduced"] .asha-toast-out, html[data-motion="reduced"] .asha-fade { animation: none !important; } html[data-motion="reduced"] .asha-row-in > td { animation: asha-glow 1.2s ease-out 1 !important; } html[data-motion="reduced"] *:active { scale: none !important; }
+</style>
+</head>
+<body class="font-sans text-gray-800">
+<script src="src/kit.js?v=1790877734"></script>
+<script src="src/data.js?v=1790877734"></script>
+<script src="src/categories.js?v=1790877734"></script>
+<script src="blocks/shell.js?v=1790877734"></script>
+<script src="blocks/schedule.js?v=1790877734"></script>
+<script src="blocks/patients.js?v=1790877734"></script>
+<script src="blocks/clinical.js?v=1790877734"></script>
+<script src="blocks/billing.js?v=1790877734"></script>
+<script src="blocks/claims.js?v=1790877734"></script>
+<script src="blocks/revenue.js?v=1790877734"></script>
+<script src="blocks/tasks.js?v=1790877734"></script>
+<script src="blocks/comms.js?v=1790877734"></script>
+<script src="blocks/forms.js?v=1790877734"></script>
+<script src="blocks/settings.js?v=1790877734"></script>
+<script src="blocks/ai.js?v=1790877734"></script>
+<script src="blocks/agents.js?v=1790877734"></script>
+<script src="blocks/agents-today.js?v=1790877734"></script>
+<script src="blocks/states.js?v=1790877734"></script>
+<script src="src/app.js?v=1790877734"></script>
+</body>
+</html>

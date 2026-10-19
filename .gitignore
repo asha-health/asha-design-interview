@@ -1,0 +1,5 @@
+# built from .claude/skills/asha-prototype/references/procedures-prototype; rebuild with its build.py
+prototypes/procedures-reference/
+docs/design-system/qa/out/
+node_modules/
+.DS_Store

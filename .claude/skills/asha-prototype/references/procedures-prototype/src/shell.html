@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>Procedures Prototype</title>
+<!--LIBHEAD-->
+<style>
+  body { background: #f9fafb; }
+  #app { width: 1720px; transform-origin: top left; position: relative; background: #fff; }
+  #stage { min-width: 0; }
+  #stage-inner { position: relative; overflow: hidden; border-radius: 12px; border: 1px solid #e5e7eb; background: #fff; }
+  html, body { height: 100%; overflow: hidden; }
+  #side-wrap { position: fixed; top: 68px; bottom: 12px; right: 12px; width: 400px; z-index: 70; display: flex; flex-direction: column;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 24px 48px -12px rgba(17,24,39,.28), 0 2px 6px rgba(16,24,40,.08); }
+  #side-wrap.on-left { right: auto; left: 12px; }
+  #side-wrap.dragged { right: auto; bottom: auto; }
+  #side-wrap.mini { bottom: auto !important; height: auto !important; }
+  #side-wrap.mini #side { display: none; }
+  #side-wrap.dragging #side-head { cursor: grabbing; }
+  body.side-off #side-wrap { display: none; }
+  #side { overflow: auto; min-height: 0; flex: 1; }
+  [hidden] { display: none !important; }
+  #app tr[data-act] { cursor: pointer; }
+  #app tr[data-on="1"] > td { background: rgb(239 246 255) !important; }
+  #stage-inner { overflow: visible !important; }
+  #coach-ring { position: absolute; z-index: 80; pointer-events: none; border: 2px solid #2563eb; border-radius: 10px; box-shadow: 0 0 0 4px rgb(37 99 235 / .18), 0 0 0 9999px rgb(17 24 39 / .14); transition: all .3s ease; }
+  #coach-ring.coach-press { box-shadow: 0 0 0 8px rgb(37 99 235 / .35), 0 0 0 9999px rgb(17 24 39 / .14); }
+  #coach-card { position: absolute; z-index: 81; width: 380px; padding: 12px 14px; border-radius: 12px; background: #111827; box-shadow: 0 20px 40px -12px rgba(0,0,0,.45); transition: top .3s ease, left .3s ease; }
+  @media (prefers-reduced-motion: reduce) { #coach-ring, #coach-card { transition: none; } }
+  #app .g-table thead th, #app .g-table tfoot td, #app .g-sticky { position: static !important; }
+</style>
+</head>
+<body class="font-sans text-gray-800">
+  <div class="sticky top-0 z-[60] bg-white/95 backdrop-blur border-b border-gray-200/80">
+    <div class="px-4 sm:px-6 h-14 flex items-center gap-3">
+      <p class="text-sm font-semibold text-gray-900 whitespace-nowrap">Procedures prototype</p>
+      <span class="text-gray-300">·</span>
+      <label class="flex items-center gap-2 text-[13px] text-gray-600 min-w-0"><span class="whitespace-nowrap">Scenario</span>
+        <select id="scenario" class="h-8 min-w-0 max-w-[420px] rounded-lg border border-gray-200 bg-white px-2 text-[13px] text-gray-800 shadow-2xs"></select></label>
+      <span class="grow"></span>
+      <span id="save-state" class="hidden md:inline text-[13px] text-gray-500 truncate"></span>
+      <button id="side-btn" type="button" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border text-[13px] font-medium cursor-pointer whitespace-nowrap"></button>
+    </div>
+  </div>
+  <div class="px-3 pt-3">
+    <div id="stage"><div id="stage-inner"><div id="app"></div><div id="coach-ring" hidden></div><div id="coach-card" hidden></div></div>
+</div>
+  </div>
+  <aside id="side-wrap" aria-label="Steps and design choices">
+    <div id="side-head" class="flex items-center gap-1 h-11 px-3 border-b border-gray-200/80 shrink-0 cursor-grab select-none touch-none" title="Drag to move"><i data-lucide="grip-vertical" class="size-4 text-gray-400"></i><p class="grow text-[13px] font-semibold text-gray-900">Steps &amp; design choices</p>
+      <button id="side-min" type="button" class="inline-flex size-7 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 cursor-pointer" aria-label="Minimize" title="Minimize"><i data-lucide="minus" class="size-4"></i></button>
+      <button id="side-move" type="button" class="inline-flex size-7 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 cursor-pointer" aria-label="Move to the other side" title="Move to the other side"><i data-lucide="arrow-left-right" class="size-4"></i></button>
+      <button id="side-close" type="button" class="inline-flex size-7 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 cursor-pointer" aria-label="Close" title="Close"><i data-lucide="x" class="size-4"></i></button></div>
+    <div id="side" class="px-4 py-4"></div>
+  </aside>
+<!--SCRIPTS-->
+<script>PROTO.init();</script>
+</body>
+</html>
