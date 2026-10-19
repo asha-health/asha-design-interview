@@ -11,6 +11,7 @@ everything is static HTML and JavaScript with invented data.
 - Before designing, load the `asha-ui` skill and read the UX principles. For a clickable prototype with design
   questions and walkthroughs, use `asha-prototype`; for side-by-side visual options, use
   `asha-design-experimentation`.
-- Draw with the library's code; copy classes from the closest block instead of approximating them.
+- Draw with the library's code; copy classes from the closest block instead of approximating them. When the library
+  lacks a piece, check `prototypes/kit-extras.js` (date picker, typed times) before drawing your own.
 - Never use real patient data. Invent everything.
 - Check your work in a browser before calling it done, and close any browser pages you open.

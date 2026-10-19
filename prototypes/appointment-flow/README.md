@@ -15,4 +15,5 @@ python3 serve.py 18791 .    # http://127.0.0.1:18791/ ; picks save to answers.js
   `yourFlyout()`, which is yours to replace.
 
 `build.py` loads every design-system block, so anything in the library (`kit.js` helpers, `SCHED.*` from the schedule
-block, any block via `BLOCKS.find((b) => b.id === "...")`) is available to your code.
+block, `SHELL.*` from the shell block, any block via `BLOCKS.find((b) => b.id === "...")`) is available to your code,
+plus `../kit-extras.js`: `DatePicker.open(anchor, { value, today, onPick })`, `parseClock("2pm")` and `clockLabel()`.

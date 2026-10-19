@@ -16,6 +16,11 @@ const PROTO = (() => {
     const base = (sc.busy ? SCHED.busyDay() : SCHED.DAY).map((a) => ({ ...a }));
     return base.map((a) => (sc.set && sc.set[a.id] ? { ...a, ...sc.set[a.id] } : a));
   }
+  /* The app's own sidebar, folded to its icon rail with Scheduling current, as on the real schedule */
+  function rail() {
+    $("rail").innerHTML = SHELL.sidebarCollapsed("Scheduling");
+    $("rail").querySelectorAll('[role="tooltip"]').forEach((x) => x.remove()); // the library's specimen pins a Tasks tooltip open
+  }
   function render() {
     $("app").innerHTML = `${SCHED.schedBar({ count: UI.appts.length })}<div id="day">${SCHED.dayGrid({ appts: UI.appts, util: UI.scenario.busy ? [100, 96, 94, 100] : undefined })}</div>`;
     icons();
@@ -87,6 +92,7 @@ const PROTO = (() => {
     $("flyout-switch").innerHTML = segmented(["Today's panel", "Your design"], UI.mode === "today" ? 0 : 1, { sm: true, attrs: 'aria-label="Which appointment panel"' });
   }
   function init() {
+    rail();
     $("scenario").innerHTML = PROTO_DATA.scenarios.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
     $("scenario").addEventListener("change", (e) => setScenario(e.target.value));
     flyoutSwitch();

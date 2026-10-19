@@ -15,7 +15,8 @@ backend and only invented data.
 | `docs/design-system/blocks/*.js` | The blocks, one file per area (schedule, patients, clinical, billing, claims, ...). |
 | `docs/design-system/BLOCKS-GUIDE.md`, `INVENTORY.md` | How blocks are built, and the real labels and statuses each screen uses. |
 | `docs/design-system/ux-principles/README.md` | How we decide what goes on a screen. |
-| `prototypes/appointment-flow/` | A starter prototype: the day schedule, clickable appointments, invented check-in and check-out data. |
+| `prototypes/appointment-flow/` | A starter prototype: the app's sidebar and day schedule, clickable appointments, invented check-in and check-out data. |
+| `prototypes/kit-extras.js` | Pieces the library doesn't have yet, drawn like the app: a date picker and typed times ("2pm", "1015"). |
 | `.claude/skills/` | Claude Code skills we use for design work: `asha-ui`, `asha-prototype`, `asha-design-experimentation`. |
 
 ## Run it

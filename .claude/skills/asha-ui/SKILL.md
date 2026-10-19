@@ -28,6 +28,8 @@ changes" outlines what v4 changed and why.
 - `docs/design-system/src/data.js`: the shared invented practice (patients, providers, chairs, payers, CDT codes).
 - `docs/design-system/INVENTORY.md`: the real labels, columns and statuses each screen uses.
 - `docs/design-system/BLOCKS-GUIDE.md`: how blocks are built and the feedback rules behind them.
+- `prototypes/kit-extras.js`: pieces the library doesn't have yet (the app's date picker, typed times). Use these
+  before drawing your own.
 
 Before choosing a layout, read [information order](references/design-system.md#choose-the-information-order-before-the-layout):
 start with the user's most frequent job and entry point. Before you design a screen, read
