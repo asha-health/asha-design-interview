@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" href="data:," />
-<title>Asha design blend</title>
+<title>Asha design system</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -30,8 +30,8 @@
   .g-row[data-sel="1"] > td, .g-row[data-open="1"] > td { background: #f5f9ff; }
   .g-cell[data-active="1"] { box-shadow: inset 0 0 0 2px #2b7fff; }
   .g-sheet .g-cell { transition: box-shadow .1s ease; }
-  /* v4: every table in a panel is the compact data grid size, editable or not */
-  .v4 aside table:not(.g-table) :is(td, th) { height: 28px !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 8px !important; font-size: 13px !important; }
+  /* Every table in a panel is the compact data grid size, editable or not */
+  aside table:not(.g-table) :is(td, th) { height: 28px !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 8px !important; font-size: 13px !important; }
   .g-sheet .g-cell[data-edit]:hover:not([data-active="1"]) { box-shadow: inset 0 0 0 1px #d1d5db; }
   .g-arrow { opacity: 0; transition: opacity .12s ease, transform .15s var(--asha-ease); }
   .g-row:hover .g-arrow, .g-cell[data-active="1"] .g-arrow, .g-arrow.g-arrow-on { opacity: 1; }

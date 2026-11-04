@@ -1,14 +1,13 @@
 /* Pieces the design-system library doesn't have yet, drawn the way the production app draws them. Load this after
  * kit.js (the prototypes' build.py does). The library itself stays untouched.
  *
- * DatePicker: the app's standard date picker (asha-ui's AshaDatePicker, used by checkout's payment date, Edit
- *   procedure and Labs): a small popover under the field, month and arrows on top, Su–Sa, today ringed, the chosen day
+ * DatePicker: the app's standard date picker (asha-ui's AshaDatePicker): a small popover under the field, month and arrows on top, Su–Sa, today ringed, the chosen day
  *   blue. A pick calls onPick and closes. Esc or a click outside closes it.
  *     DatePicker.open(anchorEl, { value: new Date(2026, 8, 25), today: new Date(2026, 8, 25), onPick: (d) => ... })
  *   dayLabel(d) gives the app's short form: "Fri, Sep 25".
  *
  * parseClock(text): a typed time to minutes after midnight, or null. Takes "10:15", "1015", "10.15", "2pm", "2 p",
- *   "7". Without am or pm, 1 to 6 o'clock means the afternoon (nobody books a 3 AM cleaning). clockLabel(minutes)
+ *   "7". Without am or pm, 1 to 6 o'clock means the afternoon (nobody books a 3 AM meeting). clockLabel(minutes)
  *   gives "2:00 PM". Pair it with a select of open times: what's typed goes first, Enter takes it. */
 const DAY3 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

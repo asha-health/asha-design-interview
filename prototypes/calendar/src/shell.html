@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>Calendar Prototype</title>
+<!--LIBHEAD-->
+<style>
+  html, body { height: 100%; overflow: hidden; background: #f9fafb; }
+  #stage { height: calc(100vh - 56px); padding: 12px; }
+  #app { height: 100%; overflow: hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; }
+  .sheet { top: 57px !important; }  /* the library's side panel sits under this page's top bar */
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body class="font-sans text-gray-800">
+  <div class="sticky top-0 z-[55] bg-white/95 backdrop-blur border-b border-gray-200/80">
+    <div class="px-4 h-14 flex items-center gap-3">
+      <p class="text-sm font-semibold text-gray-900 whitespace-nowrap">Calendar prototype</p>
+      <span class="text-[13px] text-gray-500 truncate">Click an event to open its panel.</span>
+    </div>
+  </div>
+  <div id="stage"><div id="app"></div></div>
+<!--SCRIPTS-->
+<script>PROTO.init();</script>
+</body>
+</html>

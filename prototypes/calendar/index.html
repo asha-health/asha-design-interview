@@ -1,0 +1,1285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>Calendar Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+  @theme { --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif; }
+</style>
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; background: #fff; color: #1e2939; }
+  .cbx { appearance: none; -webkit-appearance: none; background-position: center; background-repeat: no-repeat; }
+  .cbx:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5'/%3E%3C/svg%3E"); }
+  .cbx:indeterminate { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.25' stroke-linecap='round'%3E%3Cpath d='M4.5 8h7'/%3E%3C/svg%3E"); }
+  .rad { appearance: none; -webkit-appearance: none; }
+  .rad:checked { background: radial-gradient(circle, #fff 0 3px, #155dfc 3.5px); border-color: #155dfc; }
+
+  /* Grid (Attio): opaque fills so the sticky first column never shows text through it */
+  .g-table { border-collapse: separate; border-spacing: 0; }
+  .g-table thead th { position: sticky; top: 0; z-index: 3; background: #fff; }
+  .g-table .g-sticky { position: sticky; left: 0; z-index: 2; background: #fff; }
+  .g-table thead th.g-sticky { z-index: 4; }
+  .g-row:hover > td { background: #f9fafb; }
+  .g-row[data-sel="1"] > td, .g-row[data-open="1"] > td { background: #f5f9ff; }
+  .g-cell[data-active="1"] { box-shadow: inset 0 0 0 2px #2b7fff; }
+  .g-sheet .g-cell { transition: box-shadow .1s ease; }
+  /* Every table in a panel is the compact data grid size, editable or not */
+  aside table:not(.g-table) :is(td, th) { height: 28px !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 8px !important; font-size: 13px !important; }
+  .g-sheet .g-cell[data-edit]:hover:not([data-active="1"]) { box-shadow: inset 0 0 0 1px #d1d5db; }
+  .g-arrow { opacity: 0; transition: opacity .12s ease, transform .15s var(--asha-ease); }
+  .g-row:hover .g-arrow, .g-cell[data-active="1"] .g-arrow, .g-arrow.g-arrow-on { opacity: 1; }
+  .g-arrow.g-arrow-open { opacity: 1; transform: rotate(180deg); }
+  .g-foot .g-addcalc { opacity: 0; transition: opacity .12s; }
+  .g-foot:hover .g-addcalc { opacity: 1; }
+  .g-wrap:focus-visible { outline: none; }
+  .g-table tfoot td { position: sticky; bottom: 0; z-index: 2; background: #fff; box-shadow: inset 0 1px 0 rgb(229 231 235 / .8); }
+  .g-table tfoot td.g-sticky { z-index: 4; }
+
+  /* Motion (asha-ui ashaMotion: press / enter / reveal / settle) */
+  @keyframes asha-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  @keyframes asha-reveal { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes asha-settle { 0% { background: rgb(219 234 254 / .9); } 100% { background: transparent; } }
+  .asha-enter { animation: asha-enter .2s ease-out both; }
+  .asha-reveal { animation: asha-reveal .15s ease-out both; }
+  .asha-settle { animation: asha-settle 1.2s ease-out 1; }
+  /* ---- Micro-interactions (one layer for every block). Durations: fast 100–160ms, standard 180–240ms. ---- */
+  :root { --asha-ease: cubic-bezier(.2,.8,.2,1); }
+  @keyframes asha-pop { from { opacity: 0; transform: translateY(-3px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes asha-chip-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+  @keyframes asha-check { 0% { transform: scale(.75); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+  @keyframes asha-row-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  @keyframes asha-glow { from { box-shadow: inset 0 0 0 999px rgb(219 234 254 / .85); } to { box-shadow: inset 0 0 0 999px rgb(219 234 254 / 0); } }
+  @keyframes asha-toast-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes asha-toast-out { to { opacity: 0; transform: translateY(6px); } }
+  @keyframes asha-fade { from { opacity: .35; } to { opacity: 1; } }
+  .asha-pop { animation: asha-pop .16s var(--asha-ease) both; transform-origin: top; }
+  .asha-chip-in { animation: asha-chip-in .16s var(--asha-ease) both; }
+  .asha-check-pop { animation: asha-check .18s var(--asha-ease); }
+  .asha-row-in > td { animation: asha-row-in .22s var(--asha-ease) both, asha-glow 1.2s ease-out .15s 1; }
+  .asha-glow, .asha-glow-cells > td { animation: asha-glow 1.2s ease-out 1; }
+  .asha-toast-in { animation: asha-toast-in .2s var(--asha-ease) both; }
+  .asha-toast-out { animation: asha-toast-out .15s ease-in both; }
+  .asha-fade { animation: asha-fade .2s ease-out both; }
+  .asha-ink { position: absolute; bottom: -1px; height: 2px; border-radius: 2px; background: #155dfc; transition: left .2s var(--asha-ease), width .2s var(--asha-ease); pointer-events: none; z-index: 2; }
+  .asha-thumb { position: absolute; top: 3px; bottom: 3px; border-radius: 6px; background: #fff; box-shadow: 0 1px 2px rgb(16 24 40 / .06); transition: left .2s var(--asha-ease), width .2s var(--asha-ease); pointer-events: none; z-index: 0; }
+  .asha-seg-host > * { position: relative; z-index: 1; }
+  .asha-gliding { border-color: transparent !important; background: transparent !important; box-shadow: none !important; }
+  .g-row > td { transition: background-color .12s ease; }
+  .g-cell { transition: box-shadow .08s ease; }
+  svg.lucide-chevron-down { transition: transform .16s var(--asha-ease); }
+  [aria-expanded="true"] > svg.lucide-chevron-down, [aria-expanded="true"] svg.lucide-chevron-down:last-child { transform: rotate(180deg); }
+  /* AI thinking (ported from main's CopilotThinkingMotion): shimmering phrase, bouncing dots, live ping, row wash */
+  @keyframes asha-gradient { 0% { background-position: 100% 50%; } 100% { background-position: -100% 50%; } }
+  @keyframes asha-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-3px); opacity: 1; } }
+  @keyframes asha-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+  @keyframes asha-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  @keyframes asha-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .asha-shimmer { background-image: linear-gradient(90deg, #1e2939 0%, #1e2939 35%, #2b7fff 50%, #1e2939 65%, #1e2939 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: asha-gradient 2.2s linear infinite; }
+  .asha-dot { display: inline-block; width: 4px; height: 4px; border-radius: 999px; background: #2b7fff; animation: asha-dot 1.05s ease-in-out infinite; }
+  .asha-dot:nth-child(2) { animation-delay: .175s; } .asha-dot:nth-child(3) { animation-delay: .35s; }
+  .asha-ping { animation: asha-ping 1.2s cubic-bezier(0,0,.2,1) infinite; }
+  .asha-breathe { animation: asha-breathe 1.6s ease-in-out infinite; }
+  .asha-wash { background-image: linear-gradient(90deg, rgb(239 246 255 / .95), rgb(239 246 255 / .4) 55%, transparent); }
+  .asha-sweep { position: relative; overflow: hidden; } .asha-sweep::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(255 255 255 / .55), transparent); animation: asha-sweep 1.8s ease-in-out infinite; }
+  html[data-motion="reduced"] .asha-shimmer { animation: none; color: #1e2939; background: none; } html[data-motion="reduced"] .asha-dot, html[data-motion="reduced"] .asha-ping, html[data-motion="reduced"] .asha-breathe { animation: none; } html[data-motion="reduced"] .asha-sweep::after { display: none; }
+  @media (prefers-reduced-motion: reduce) { .asha-shimmer { animation: none; color: #1e2939; background: none; } .asha-dot, .asha-ping, .asha-breathe { animation: none; } .asha-sweep::after { display: none; } }
+  .sheet { transform: translateX(104%); transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+  .sheet[data-open="1"] { transform: none; }
+  .bulk { transition: transform .18s cubic-bezier(.2,.8,.2,1), opacity .18s; }
+  /* Reduced motion keeps colour feedback (the save glow) and drops movement. The page's own switch
+   * (html[data-motion="reduced"]) previews it without changing the computer's setting. */
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .sheet, .bulk, .asha-ink, .asha-thumb, svg.lucide-chevron-down { transition: none !important; } .asha-enter, .asha-reveal, .asha-pop, .asha-chip-in, .asha-check-pop, .asha-toast-in, .asha-toast-out, .asha-fade { animation: none !important; } .asha-row-in > td { animation: asha-glow 1.2s ease-out 1 !important; } *:active { scale: none !important; } }
+  html[data-motion="reduced"] { scroll-behavior: auto; }
+  html[data-motion="reduced"] .sheet, html[data-motion="reduced"] .bulk, html[data-motion="reduced"] .asha-ink, html[data-motion="reduced"] .asha-thumb, html[data-motion="reduced"] svg.lucide-chevron-down { transition: none !important; } html[data-motion="reduced"] .asha-enter, html[data-motion="reduced"] .asha-reveal, html[data-motion="reduced"] .asha-pop, html[data-motion="reduced"] .asha-chip-in, html[data-motion="reduced"] .asha-check-pop, html[data-motion="reduced"] .asha-toast-in, html[data-motion="reduced"] .asha-toast-out, html[data-motion="reduced"] .asha-fade { animation: none !important; } html[data-motion="reduced"] .asha-row-in > td { animation: asha-glow 1.2s ease-out 1 !important; } html[data-motion="reduced"] *:active { scale: none !important; }
+</style>
+
+<style>
+  html, body { height: 100%; overflow: hidden; background: #f9fafb; }
+  #stage { height: calc(100vh - 56px); padding: 12px; }
+  #app { height: 100%; overflow: hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; }
+  .sheet { top: 57px !important; }  /* the library's side panel sits under this page's top bar */
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body class="font-sans text-gray-800">
+  <div class="sticky top-0 z-[55] bg-white/95 backdrop-blur border-b border-gray-200/80">
+    <div class="px-4 h-14 flex items-center gap-3">
+      <p class="text-sm font-semibold text-gray-900 whitespace-nowrap">Calendar prototype</p>
+      <span class="text-[13px] text-gray-500 truncate">Click an event to open its panel.</span>
+    </div>
+  </div>
+  <div id="stage"><div id="app"></div></div>
+<script>
+/* ---- kit.js ---- */
+/* Asha design blend — shared kit (2026-09-25).
+ * Colour = Preline (Tailwind 4 blue-600 + gray, soft 100/800 fills, recipes copied from Preline's own
+ * button / badge / table markup). Size + finish = shadcn (36px controls, 14px text, 8px corners,
+ * hairline shadows, 3px focus halo). Data grid = Attio (column lines, sentence chips, totals row,
+ * cell keyboard). House rules from asha-ui settings-kit: one hairline (gray-200/80), status is a dot
+ * plus a word, blue = on / the accent, orange = a person must fix this, everything else grey.
+ * Every class recipe lives once in R; blocks compose R and the helpers below. All data is invented. */
+
+/* ============================================================ class recipes */
+const R = {
+  // Lines and surfaces (asha-ui: one hairline, 8px boxes without shadow; 12px only for menus/dialogs)
+  line: "border-gray-200/80",
+  box: "rounded-lg border border-gray-200/80 bg-white",
+  boxMuted: "rounded-lg bg-gray-50",
+  frame: "rounded-xl border border-gray-200/80 bg-white shadow-2xs",
+
+  // Buttons — Preline colour recipes, shadcn sizes, asha press feedback
+  btn: "inline-flex items-center justify-center gap-x-2 whitespace-nowrap font-medium rounded-lg border cursor-pointer transition-[color,background-color,border-color,box-shadow,transform] duration-100 ease-out motion-safe:active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-blue-600/20 [&_svg]:size-4 [&_svg]:shrink-0",
+  lg: "h-10 px-5 text-sm",
+  md: "h-9 px-4 text-sm",
+  sm: "h-8 px-3 text-[13px] gap-x-1.5",
+  xs: "h-7 px-2.5 text-[13px] gap-x-1.5 [&_svg]:size-3.5",
+  iconMd: "size-9 !px-0",
+  iconSm: "size-8 !px-0",
+  iconXs: "size-7 !px-0",
+  solid: "bg-blue-600 border-transparent text-white shadow-2xs hover:bg-blue-700 focus-visible:bg-blue-700",
+  white: "bg-white border-gray-200 text-gray-800 shadow-2xs hover:bg-gray-50 focus-visible:bg-gray-50",
+  soft: "bg-blue-100 border-transparent text-blue-800 hover:bg-blue-200 focus-visible:bg-blue-200",
+  ghost: "bg-transparent border-transparent text-gray-800 hover:bg-gray-100 focus-visible:bg-gray-100",
+  quiet: "bg-transparent border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800",
+  link: "bg-transparent border-transparent !h-auto !px-0 text-blue-600 hover:text-blue-700 hover:underline underline-offset-4",
+  danger: "bg-white border-gray-200 text-red-600 shadow-2xs hover:bg-red-50",
+  dangerSolid: "bg-red-600 border-transparent text-white shadow-2xs hover:bg-red-700",
+  onDark: "bg-transparent border-transparent text-white hover:bg-white/10",
+
+  // Fields — Preline border/focus colours, shadcn height and halo
+  input: "block w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 shadow-2xs placeholder:text-gray-400 hover:border-gray-300 focus:outline-hidden focus:border-blue-500 focus:ring-3 focus:ring-blue-600/15 disabled:opacity-50 disabled:bg-gray-50",
+  inputSm: "block w-full h-8 px-2.5 bg-white border border-gray-200 rounded-lg text-[13px] text-gray-800 shadow-2xs placeholder:text-gray-400 hover:border-gray-300 focus:outline-hidden focus:border-blue-500 focus:ring-3 focus:ring-blue-600/15",
+  inputBad: "block w-full h-9 px-3 bg-white border border-red-300 rounded-lg text-sm text-gray-800 shadow-2xs focus:outline-hidden focus:border-red-500 focus:ring-3 focus:ring-red-600/15",
+  textarea: "block w-full min-h-20 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 shadow-2xs placeholder:text-gray-400 focus:outline-hidden focus:border-blue-500 focus:ring-3 focus:ring-blue-600/15",
+  search: "block w-full h-8 ps-8 pe-3 bg-gray-100 border border-transparent rounded-lg text-[13px] text-gray-800 placeholder:text-gray-500 focus:bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-600/15 focus:outline-hidden",
+  select: "inline-flex w-full items-center justify-between gap-x-2 h-9 px-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 shadow-2xs hover:border-gray-300 cursor-pointer focus:outline-hidden focus:border-blue-500 focus:ring-3 focus:ring-blue-600/15 [&_svg]:size-4 [&_svg]:text-gray-400",
+  selectSm: "inline-flex w-full items-center justify-between gap-x-2 h-8 px-2.5 bg-white border border-gray-200 rounded-lg text-[13px] text-gray-800 shadow-2xs hover:border-gray-300 cursor-pointer [&_svg]:size-3.5 [&_svg]:text-gray-400",
+  checkbox: "cbx size-4 shrink-0 rounded-[4px] border border-gray-300 bg-white shadow-2xs cursor-pointer checked:bg-blue-600 checked:border-blue-600 indeterminate:bg-blue-600 indeterminate:border-blue-600 focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-blue-600/20",
+  radio: "rad size-4 shrink-0 rounded-full border border-gray-300 bg-white shadow-2xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-blue-600/20",
+  switchTrack: "group relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-gray-200 cursor-pointer transition-colors aria-checked:bg-blue-600 focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-blue-600/20",
+  switchKnob: "size-4 rounded-full bg-white shadow-sm translate-x-0.5 transition-transform group-aria-checked:translate-x-[18px]",
+  label: "text-sm font-medium text-gray-800",
+  help: "text-[13px] leading-5 text-gray-500",
+
+  // Type
+  display: "text-[32px] leading-tight font-semibold tracking-tight text-gray-800",
+  pageTitle: "text-2xl font-semibold tracking-tight text-gray-800",
+  sectionTitle: "text-base font-semibold text-gray-800",
+  groupTitle: "text-sm font-semibold text-gray-800",
+  body: "text-sm text-gray-800",
+  secondary: "text-sm text-gray-500",
+  caption: "text-xs text-gray-500",
+  eyebrow: "text-xs font-medium text-gray-500",
+  number: "text-2xl font-semibold tracking-tight tabular-nums text-gray-800",
+  numberSm: "text-lg font-semibold tracking-tight tabular-nums text-gray-800",
+
+  // Tags and status — Preline soft badges at shadcn badge size; status is a dot and a word
+  tag: "inline-flex items-center gap-x-1 h-[22px] px-2 rounded-full text-xs font-medium whitespace-nowrap",
+  tagBlue: "bg-blue-100 text-blue-800",
+  tagTeal: "bg-teal-100 text-teal-800",
+  tagIndigo: "bg-indigo-100 text-indigo-800",
+  tagGray: "bg-gray-100 text-gray-800",
+  tagOutline: "border border-gray-200 bg-white text-gray-700",
+  status: "inline-flex items-center gap-x-1.5 text-sm text-gray-800 whitespace-nowrap",
+  dot: "inline-block size-2 shrink-0 rounded-full",
+  count: "inline-flex items-center h-5 min-w-5 justify-center px-1.5 rounded-full bg-gray-100 text-xs font-medium text-gray-600 tabular-nums",
+  countBlue: "inline-flex items-center h-5 min-w-5 justify-center px-1.5 rounded-full bg-blue-100 text-xs font-medium text-blue-800 tabular-nums",
+  kbd: "inline-flex items-center h-5 px-1.5 rounded-md border border-gray-200 bg-white text-[11px] font-medium text-gray-500 font-sans",
+  flag: "inline-flex items-center gap-x-1.5 text-sm text-gray-500 [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-orange-500",
+  delta: "inline-flex items-center h-5 px-1.5 rounded-md bg-gray-100 text-xs font-medium text-gray-600 tabular-nums",
+
+  // Overlays
+  menu: "asha-pop w-60 p-1 bg-white border border-gray-200 rounded-xl shadow-xl",
+  menuItem: "flex w-full items-center gap-x-2 h-8 px-2 rounded-lg text-[13px] text-gray-800 cursor-pointer transition-colors duration-100 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 [&_svg]:size-4 [&_svg]:text-gray-500",
+  menuDanger: "flex w-full items-center gap-x-2 h-8 px-2 rounded-lg text-[13px] text-red-600 cursor-pointer hover:bg-red-50 [&_svg]:size-4",
+  menuLabel: "px-2 pt-1.5 pb-1 text-xs font-medium text-gray-500",
+  menuSep: "my-1 -mx-1 border-t border-gray-200/80",
+  popover: "asha-pop bg-white border border-gray-200 rounded-xl shadow-xl",
+  dialog: "asha-pop w-[480px] max-w-full bg-white rounded-xl border border-gray-200 shadow-[0_24px_48px_-12px_rgba(17,24,39,0.25)]",
+  tooltip: "inline-flex items-center gap-x-2 py-1 px-2 rounded-md bg-gray-900 text-xs font-medium text-white shadow-md",
+
+  // Navigation
+  navItem: "flex w-full items-center gap-x-2 h-7 px-2 rounded-lg text-sm text-gray-700 transition-colors duration-100 hover:bg-gray-100 cursor-pointer [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-gray-500",
+  navItemOn: "flex w-full items-center gap-x-2 h-7 px-2 rounded-lg text-sm font-medium text-gray-900 bg-gray-100 cursor-pointer [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-gray-800",
+  navGroup: "px-2 pt-3 pb-1 text-xs font-medium text-gray-500",
+  tabs: "flex items-center gap-x-5 border-b border-gray-200/80",
+  tab: "relative -mb-px inline-flex items-center gap-x-1.5 h-10 border-b-2 border-transparent text-sm font-medium text-gray-500 transition-colors duration-150 hover:text-gray-800 cursor-pointer whitespace-nowrap [&_svg]:size-4",
+  tabOn: "relative -mb-px inline-flex items-center gap-x-1.5 h-10 border-b-2 border-blue-600 text-sm font-medium text-blue-600 cursor-pointer whitespace-nowrap [&_svg]:size-4",
+  seg: "inline-flex h-9 p-[3px] rounded-lg bg-gray-100",
+  segSm: "inline-flex h-8 p-[3px] rounded-lg bg-gray-100",
+  segItem: "inline-flex items-center gap-x-1.5 h-full px-3 rounded-md text-sm font-medium text-gray-600 transition-colors duration-150 hover:text-gray-800 cursor-pointer whitespace-nowrap [&_svg]:size-4",
+  segOn: "inline-flex items-center gap-x-1.5 h-full px-3 rounded-md text-sm font-medium bg-white text-gray-800 shadow-2xs cursor-pointer whitespace-nowrap [&_svg]:size-4",
+  segItemSm: "inline-flex items-center gap-x-1.5 h-full px-2.5 rounded-md text-[13px] font-medium text-gray-600 hover:text-gray-800 cursor-pointer whitespace-nowrap",
+  segOnSm: "inline-flex items-center gap-x-1.5 h-full px-2.5 rounded-md text-[13px] font-medium bg-white text-gray-800 shadow-2xs cursor-pointer whitespace-nowrap",
+  // One 44px top line for every bar: page headers, panel tops, sidebar header
+  bar: "flex h-11 shrink-0 items-center gap-2 px-4 border-b border-gray-200/80 bg-white",
+  crumb: "inline-flex items-center gap-x-1.5 text-[13px] text-gray-500 [&_svg]:size-3.5 [&_svg]:text-gray-300",
+
+  // Data grid — Attio layout, asha-ui Lists sizes (40px header, 36px rows)
+  gridWrap: "g-wrap overflow-auto border-y border-gray-200/80",
+  gridHead: "h-10 px-3 border-b border-e border-gray-200/80 text-start text-sm font-medium text-gray-500 whitespace-nowrap select-none",
+  gridCell: "g-cell h-9 px-3 border-b border-e border-gray-200/80 text-sm text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis",
+  gridFoot: "h-9 px-3 border-e border-gray-200/80 text-[13px] text-gray-400 whitespace-nowrap",
+  // Attio-style condition chip: field · operator · value | ×
+  chip: "inline-flex h-8 max-w-full shrink-0 items-stretch overflow-hidden rounded-md border border-gray-200 bg-white text-xs shadow-2xs hover:border-gray-300 whitespace-nowrap",
+  chipBody: "inline-flex min-w-0 items-center gap-1 px-2 hover:bg-gray-50 cursor-pointer [&_svg]:size-3 [&_svg]:text-blue-700",
+  chipField: "shrink-0 font-medium text-gray-800",
+  chipOp: "shrink-0 text-gray-500",
+  chipValue: "inline-flex items-center gap-0.5 truncate font-medium text-blue-700",
+  chipX: "inline-flex w-6 shrink-0 items-center justify-center border-s border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-700 cursor-pointer [&_svg]:size-3",
+  bulkBar: "bulk fixed bottom-6 left-1/2 z-40 -translate-x-1/2 flex items-center gap-x-1 h-11 ps-4 pe-1.5 rounded-xl bg-gray-900 text-white text-sm shadow-xl",
+
+  // A table inside a panel's padding is always boxed: full border, 8px corners, no doubled last line
+  tableBox: "rounded-lg border border-gray-200/80 overflow-hidden [&_table]:w-full [&_table]:!border-y-0 [&_tbody_tr:last-child>td]:border-b-0 [&_tfoot_td]:border-t [&_tfoot_td]:border-gray-200/80",
+  // Simple table (read-only, no column lines) and key/value rows
+  tHead: "h-10 px-3 border-b border-gray-200/80 text-start text-sm font-medium text-gray-500 whitespace-nowrap",
+  tCell: "h-9 px-3 border-b border-gray-200/80 text-sm text-gray-800 whitespace-nowrap",
+  kvRow: "grid grid-cols-[140px_1fr] items-center min-h-9 gap-x-3 text-sm",
+  kvKey: "inline-flex items-center gap-x-2 text-[13px] text-gray-500 [&_svg]:size-4 [&_svg]:text-gray-400",
+
+  // Skeletons
+  skel: "rounded-md bg-gray-100 asha-sweep"
+};
+
+/* ============================================================ helpers */
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const I = (name, cls = "") => `<i data-lucide="${name}" class="${cls}" aria-hidden="true"></i>`;
+const cx = (...a) => a.filter(Boolean).join(" ");
+const icons = () => window.lucide && lucide.createIcons({ attrs: { "stroke-width": 1.75 } });
+
+function button(label, { v = "white", s = "md", icon, iconEnd, attrs = "", cls = "" } = {}) {
+  return `<button type="button" class="${cx(R.btn, R[s], R[v], cls)}" ${attrs}>${icon ? I(icon) : ""}${label}${iconEnd ? I(iconEnd) : ""}</button>`;
+}
+function iconButton(icon, label, { v = "quiet", s = "iconMd", attrs = "", cls = "" } = {}) {
+  const base = s === "iconMd" ? R.md : s === "iconSm" ? R.sm : R.xs;
+  return `<button type="button" class="${cx(R.btn, base, R[s], R[v], cls)}" aria-label="${esc(label)}" title="${esc(label)}" ${attrs}>${I(icon)}</button>`;
+}
+const sw = (on, label) => `<button type="button" role="switch" aria-checked="${on}" aria-label="${esc(label)}" class="${R.switchTrack}" data-act="switch"><span class="${R.switchKnob}"></span></button>`;
+const tag = (label, tone = "tagGray") => `<span class="${cx(R.tag, R[tone])}">${esc(label)}</span>`;
+/* One applied filter or sort as an Attio condition chip; removeAttrs go on the × button */
+const condChip = (field, op, value, removeAttrs = "", removeLabel = "Remove", cls = "") => `<span class="${R.chip} ${cls}" role="group" aria-label="${esc(field)} ${esc(op)}"><span class="${R.chipBody}"><span class="${R.chipField}">${field}</span>${op ? `<span class="${R.chipOp}">${op}</span>` : ""}<span class="${R.chipValue}">${value}</span></span><button type="button" class="${R.chipX}" aria-label="${esc(removeLabel)}" ${removeAttrs}>${I("x")}</button></span>`;
+const kbd = (k) => `<kbd class="${R.kbd}">${k}</kbd>`;
+const checkbox = (checked = false, label = "", attrs = "") => `<input type="checkbox" class="${R.checkbox}" ${checked ? "checked" : ""} ${label ? `aria-label="${esc(label)}"` : ""} ${attrs} />`;
+
+/* Status: a dot and a word. tone: on (blue) · off (grey) · needs (orange, a person must fix it) · quiet (light grey) */
+const TONE_DOT = { on: "bg-blue-600", off: "bg-gray-300", needs: "bg-orange-500", quiet: "bg-gray-200", mid: "bg-blue-300" };
+const statusDot = (label, tone = "off", cls = "") => `<span class="${cx(R.status, cls)}"><span class="${cx(R.dot, TONE_DOT[tone])}"></span>${esc(label)}</span>`;
+const flag = (text, cls = "") => `<span class="${cx(R.flag, cls)}">${I("circle-alert")}${text}</span>`;
+const note = (text, tone = "needs") => {
+  const icon = tone === "needs" ? I("circle-alert", "size-4 mt-0.5 shrink-0 text-orange-500") : tone === "error" ? I("circle-x", "size-4 mt-0.5 shrink-0 text-red-600") : I("info", "size-4 mt-0.5 shrink-0 text-gray-400");
+  return `<p class="flex items-start gap-x-2 text-[13px] leading-5 text-gray-600">${icon}<span>${text}</span></p>`;
+};
+
+/* A row-level alert that never adds a line: orange icon + 2–4 words inline; the full sentence and one action
+ * open in a small popover on hover/focus. Use instead of a note() under a row. align: "end" (default) | "start" */
+const alertMark = (short, detail, { action = "", align = "end" } = {}) => `<span class="group/alert relative inline-flex shrink-0 items-center">
+  <button type="button" class="inline-flex items-center gap-1 h-6 px-1.5 -mx-1.5 rounded-md text-[13px] text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-blue-600/20 cursor-pointer whitespace-nowrap" aria-describedby="">${I("circle-alert", "size-3.5 shrink-0 text-orange-500")}${short}</button>
+  <span role="tooltip" class="pointer-events-none invisible opacity-0 group-hover/alert:visible group-hover/alert:opacity-100 group-hover/alert:pointer-events-auto group-focus-within/alert:visible group-focus-within/alert:opacity-100 group-focus-within/alert:pointer-events-auto transition-opacity duration-150 absolute top-full ${align === "start" ? "start-0" : "end-0"} z-30 mt-1.5 w-72 ${R.popover} p-3 text-[13px] leading-5 text-gray-700 whitespace-normal">${detail}${action ? `<span class="mt-2 flex justify-end">${action}</span>` : ""}</span></span>`;
+
+/* Avatars: people get grey initials; organisations get a small outlined square mark */
+const initials = (n) => String(n || "").split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+function avatar(name, { size = 6, square = false, solid = false } = {}) {
+  const sz = { 5: "size-5 text-[10px]", 6: "size-6 text-[10px]", 7: "size-7 text-[11px]", 8: "size-8 text-xs", 9: "size-9 text-xs", 10: "size-10 text-sm", 12: "size-12 text-base" }[size];
+  const tone = solid || square ? "bg-white ring-1 ring-inset ring-gray-200 text-gray-600" : "bg-gray-100 text-gray-600";
+  return `<span class="flex shrink-0 justify-center items-center ${sz} ${square ? "rounded-md" : "rounded-full"} ${tone} font-semibold" aria-hidden="true">${esc(initials(name) || "?")}</span>`;
+}
+
+/* Formatting */
+const money = (n, { cents = true } = {}) => (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fmtDate = (iso) => (iso ? `${MONTHS[+iso.slice(5, 7) - 1]} ${+iso.slice(8, 10)}` : "");
+const fmtDateY = (iso) => (iso ? `${MONTHS[+iso.slice(5, 7) - 1]} ${+iso.slice(8, 10)}, ${iso.slice(0, 4)}` : "");
+
+/* Small layout helpers */
+const searchBox = (placeholder, { w = "w-56", value = "", attrs = "" } = {}) => `<div class="relative ${w} shrink-0">
+  <span class="absolute inset-y-0 start-0 flex items-center ps-2.5 pointer-events-none">${I("search", "size-4 text-gray-500")}</span>
+  <input class="${R.search}" placeholder="${esc(placeholder)}" value="${esc(value)}" aria-label="${esc(placeholder)}" ${attrs} /></div>`;
+const tabsBar = (items, on = 0, cls = "") => `<nav class="${cx(R.tabs, cls)}">${items.map((t, i) => {
+  const [label, n] = Array.isArray(t) ? t : [t];
+  return `<span class="${i === on ? R.tabOn : R.tab}" data-tab="${i}" role="tab" aria-selected="${i === on}" ${i === on ? 'aria-current="page"' : ""}>${label}${n != null ? ` <span class="${i === on ? R.countBlue : R.count}">${n}</span>` : ""}</span>`;
+}).join("")}</nav>`;
+const segmented = (items, on = 0, { sm = false, attrs = "" } = {}) => `<div class="${sm ? R.segSm : R.seg}" role="tablist" ${attrs}>${items.map((t, i) => `<button type="button" role="tab" aria-selected="${i === on}" class="${i === on ? (sm ? R.segOnSm : R.segOn) : (sm ? R.segItemSm : R.segItem)}" data-seg="${i}">${t}</button>`).join("")}</div>`;
+const kv = (icon, key, value) => `<div class="${R.kvRow}"><span class="${R.kvKey}">${icon ? I(icon) : ""}${key}</span><div class="min-w-0 text-gray-800">${value}</div></div>`;
+const section = (title, body, { actions = "", count, cls = "" } = {}) => `<section class="${cls}">
+  <div class="flex items-center justify-between gap-3 mb-2"><h3 class="${R.groupTitle} flex items-center gap-x-2">${title}${count != null ? ` <span class="${R.count}">${count}</span>` : ""}</h3>${actions}</div>${body}</section>`;
+const metric = (label, value, { delta, sub, goal } = {}) => {
+  const bar = goal != null ? `<div class="mt-1.5 h-1 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-600" style="width:${Math.min(100, goal)}%"></div></div>` : "";
+  return `<div class="min-w-0">
+  <p class="text-[13px] text-gray-500 truncate">${label}</p>
+  <p class="mt-1 flex items-center gap-x-2"><span class="${R.number}">${value}</span>${delta ? `<span class="${R.delta}">${delta}</span>` : ""}</p>
+  ${sub ? `<p class="mt-1 text-xs text-gray-500">${sub}</p>` : ""}${bar}</div>`; };
+const metricStrip = (items, cls = "", { gutter = 0 } = {}) => `<div class="grid border-y border-gray-200/80 divide-x divide-gray-200/80 ${gutter ? `-mx-[${gutter}px]` : ""} ${cls}" style="grid-template-columns:repeat(${items.length},minmax(0,1fr))">${items.map((m) => `<div class="py-4 px-5 ${gutter ? `first:ps-[${gutter}px] last:pe-[${gutter}px]` : "first:ps-0"}">${metric(...m)}</div>`).join("")}</div>`;
+const skel = (w = "w-full", h = "h-3.5") => `<span class="block ${w} ${h} ${R.skel}"></span>`;
+const emptyState = ({ icon = "inbox", title, body, action = "" }) => `<div class="flex flex-col items-center justify-center gap-1 py-14 px-6 text-center">
+  <span class="flex items-center justify-center size-10 mb-2 rounded-lg bg-gray-100 text-gray-500">${I(icon, "size-5")}</span>
+  <p class="text-sm font-semibold text-gray-800">${title}</p>${body ? `<p class="${R.help} max-w-sm">${body}</p>` : ""}${action ? `<div class="mt-3">${action}</div>` : ""}</div>`;
+const errorState = (title = "Couldn't load this", body = "Check your connection and try again.") => `<div class="flex flex-col items-center justify-center gap-1 py-14 px-6 text-center">
+  <span class="flex items-center justify-center size-10 mb-2 rounded-lg bg-gray-100 text-gray-500">${I("cloud-off", "size-5")}</span>
+  <p class="text-sm font-semibold text-gray-800">${title}</p><p class="${R.help}">${body}</p><div class="mt-3">${button("Try again", { v: "white", s: "sm", icon: "rotate-cw" })}</div></div>`;
+
+/* The one-line bar at the top of every list or workbench (AshaWorkspaceHeader): "Parent / Title", actions right */
+const workspaceHeader = ({ parent, title, actions = "", cls = "" }) => `<div class="flex items-center justify-between gap-4 h-11 px-4 border-b border-gray-200/80 bg-white ${cls}">
+  <div class="flex items-center gap-1.5 text-sm min-w-0">${parent ? `<span class="text-gray-500 whitespace-nowrap">${parent}</span>${I("chevron-right", "size-3.5 shrink-0 text-gray-300")}` : ""}<span class="font-semibold text-gray-800 truncate">${title}</span></div>
+  <div class="flex items-center gap-1.5 shrink-0">${actions}</div></div>`;
+/* Underline tabs with a right slot (AshaInlineTabs + rightSlot) */
+const tabsWithSlot = (items, on = 0, right = "", cls = "px-4", { gutter = 0 } = {}) => `<div class="flex items-end justify-between gap-4 border-b border-gray-200/80 ${gutter ? `-mx-[${gutter}px] px-[${gutter}px]` : ""} ${cls}">${tabsBar(items, on, "!border-0")}<div class="flex items-center gap-2 pb-1.5 shrink-0">${right}</div></div>`;
+/* Make tabsBar tabs clickable inside root; onPick(index) re-renders what the tab controls */
+function wireTabs(root, onPick) {
+  root.addEventListener("click", (e) => { const t = e.target.closest("[data-tab]"); if (!t || !root.contains(t)) return;
+    const bar = t.parentElement, prev = bar.querySelector('[data-tab][aria-selected="true"]'); [...bar.querySelectorAll("[data-tab]")].forEach((x) => { const on = x === t; x.className = on ? R.tabOn : R.tab; x.setAttribute("aria-selected", on);
+      const c = x.querySelector("span"); if (c) c.className = on ? R.countBlue : R.count; });
+    Motion.glide(bar, prev, t, "ink"); onPick(+t.dataset.tab); });
+}
+const dateRangeButton = (label = "Last 30 days") => button(label, { v: "white", s: "sm", icon: "calendar", iconEnd: "chevron-down", cls: "[&_svg:last-child]:text-gray-400" });
+/* Loading grid: keeps the frame and header, grey bars where rows will be */
+/* Tables are never open-sided: a table either runs edge to edge of the surface it sits on, or is boxed (R.tableBox).
+ * edgeToEdge(g) pulls a table out through the host's g px side padding and pads its first and last columns by the same
+ * g, so the lines touch both edges while the text still lines up with the toolbar above. */
+const edgeToEdge = (g = 16) => (g ? `-mx-[${g}px] [&_tr>*:first-child]:!ps-[${g}px] [&_tr>*:last-child]:!pe-[${g}px]` : "");
+const gridSkeleton = (headers, rows = 6, { gutter = 16 } = {}) => `<div class="border-y border-gray-200/80 overflow-hidden ${edgeToEdge(gutter)}"><table class="w-full table-fixed border-separate border-spacing-0">
+  <thead><tr>${headers.map((h) => `<th class="${R.gridHead}">${h}</th>`).join("")}</tr></thead>
+  <tbody>${Array.from({ length: rows }, (_, r) => `<tr>${headers.map((_, c) => `<td class="${R.gridCell}"><span class="block h-3 ${R.skel}" style="width:${[70, 45, 60, 35, 55, 40][(r + c) % 6]}%"></span></td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+
+/* ============================================================ motion
+ * One layer for every block (asha-ui ashaMotion: press · enter · reveal · settle, plus pop, glide, toast).
+ * Movement turns off for reduce-motion (the computer setting, or the page's own Animations switch). */
+const Motion = {
+  reduced: () => document.documentElement.dataset.motion === "reduced" || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches),
+  /* Replay a one-shot class on an element (settle glow, check pop, fade) */
+  play(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); el.addEventListener("animationend", () => el.classList.remove(cls), { once: true }); },
+  settle(el) { Motion.play(el, "asha-glow"); },
+  /* Slide an indicator (tab ink or segment thumb) from one item to another inside their container */
+  glide(container, from, to, kind) {
+    if (!container || !from || !to || from === to || Motion.reduced()) return;
+    const c = container.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+    if (getComputedStyle(container).position === "static") container.style.position = "relative";
+    if (kind === "thumb") container.classList.add("asha-seg-host");
+    const g = document.createElement("span"); g.className = kind === "thumb" ? "asha-thumb" : "asha-ink"; g.setAttribute("aria-hidden", "true");
+    g.style.left = a.left - c.left + container.scrollLeft + "px"; g.style.width = a.width + "px";
+    container.appendChild(g); to.classList.add("asha-gliding");
+    requestAnimationFrame(() => requestAnimationFrame(() => { g.style.left = b.left - c.left + container.scrollLeft + "px"; g.style.width = b.width + "px"; }));
+    setTimeout(() => { g.remove(); to.classList.remove("asha-gliding"); }, 240);
+  }
+};
+/* Toasts are the light, frosted, Mac-style card Asha's notifications use (Team Chat alerts, PR #7685): top-right
+ * corner, newest first, a soft shadow and blur instead of a dark slab, the close button a small frosted circle on the
+ * card's top-left corner that shows on hover, actions as quiet text buttons. */
+R.alertCard = "group/alert relative flex items-center gap-x-3 w-[356px] max-w-full p-3 rounded-2xl bg-white/70 text-[13px] text-gray-900 shadow-[0_0_0_0.5px_rgb(0_0_0/0.1),0_10px_28px_-8px_rgb(16_24_40/0.22),0_2px_6px_rgb(16_24_40/0.08)] backdrop-blur-xl backdrop-saturate-150";
+R.alertClose = "absolute -top-1.5 -start-1.5 inline-flex size-5 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-[0_0_0_0.5px_rgb(0_0_0/0.12),0_1px_3px_rgb(16_24_40/0.15)] backdrop-blur-xl opacity-0 transition-opacity group-hover/alert:opacity-100 focus-visible:opacity-100 hover:text-gray-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600 [@media(hover:none)]:opacity-100 cursor-pointer";
+R.alertAction = "inline-flex h-7 shrink-0 items-center rounded-lg px-2.5 text-[13px] font-medium text-gray-900 hover:bg-black/5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600 cursor-pointer";
+/* One alert card: icon (or a person's avatar for a message), a bold title line and an optional grey line, an action */
+const alertCard = ({ icon = "circle-check", tone = "blue", lead = "", title, body = "", time = "", action = "", attrs = "" }) => `<div class="${R.alertCard}" role="status" ${attrs}><button type="button" class="${R.alertClose}" aria-label="Dismiss">${I("x", "size-3")}</button>${lead || I(icon, `size-4 shrink-0 ${{ blue: "text-blue-600", orange: "text-orange-500", red: "text-red-600", gray: "text-gray-400" }[tone]}`)}<div class="min-w-0 grow"><div class="flex items-baseline gap-2"><p class="min-w-0 grow truncate font-medium">${title}</p>${time ? `<span class="shrink-0 text-xs text-gray-500">${time}</span>` : ""}</div>${body ? `<p class="text-gray-600 line-clamp-2">${body}</p>` : ""}</div>${action ? `<button type="button" class="${R.alertAction}" data-toast-action>${action}</button>` : ""}</div>`;
+/* A short confirmation in the top-right corner; one optional action such as Undo */
+function toast(msg, { action, onAction, icon = "check", ms = 4000 } = {}) {
+  let host = document.getElementById("asha-toasts");
+  if (!host) { host = document.createElement("div"); host.id = "asha-toasts"; host.className = "fixed top-3 end-3 z-[60] flex flex-col items-end gap-2 pointer-events-none"; host.setAttribute("aria-live", "polite"); document.body.appendChild(host); }
+  const t = document.createElement("div");
+  t.className = "pointer-events-auto asha-toast-in"; t.innerHTML = alertCard({ icon: icon === "check" ? "circle-check" : icon, tone: /trash|x/.test(icon) ? "gray" : "blue", title: msg, action }); t.querySelector("[aria-label=Dismiss]").addEventListener("click", () => kill());
+  host.appendChild(t); icons();
+  let gone = false; const kill = () => { if (gone) return; gone = true; t.classList.remove("asha-toast-in"); t.classList.add("asha-toast-out"); setTimeout(() => t.remove(), Motion.reduced() ? 0 : 160); };
+  const act = t.querySelector("[data-toast-action]"); if (act) act.addEventListener("click", () => { if (onAction) onAction(); kill(); });
+  setTimeout(kill, ms);
+}
+
+/* Chart axis text reads at a distance: 11px gray-500 (about 4.8:1) */
+const AXIS_INK = "#6A7282", AXIS_PX = 11;
+/* ============================================================ charts (blue only, per the colour rules) */
+const Chart = {
+  /* Vertical bars. values: numbers; labels: strings; goal: optional line; highlight: index drawn darker */
+  bars({ values, labels = [], w = 560, h = 180, goal, fmt = (v) => v, highlight = values.length - 1, tone = "#155DFC", muted = "#BEDBFF" }) {
+    const pad = { l: 36, r: 8, t: 10, b: 22 };
+    const max = Math.max(...values, goal || 0) * 1.12 || 1;
+    const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b, bw = (iw / values.length) * 0.62;
+    const y = (v) => pad.t + ih - (v / max) * ih;
+    const ticks = [0, max / 2, max].map((t) => `<line x1="${pad.l}" x2="${w - pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="#E5E7EB" stroke-width="1"/><text x="${pad.l - 6}" y="${y(t) + 3}" text-anchor="end" font-size="${AXIS_PX}" fill="${AXIS_INK}">${fmt(Math.round(t))}</text>`).join("");
+    const bars = values.map((v, i) => { const x = pad.l + (iw / values.length) * i + ((iw / values.length) - bw) / 2;
+      return `<rect x="${x}" y="${y(v)}" width="${bw}" height="${Math.max(1, pad.t + ih - y(v))}" rx="3" fill="${i === highlight ? tone : muted}"><title>${esc(labels[i] || "")} ${fmt(v)}</title></rect>
+      ${labels[i] ? `<text x="${x + bw / 2}" y="${h - 6}" text-anchor="middle" font-size="${AXIS_PX}" fill="#6A7282">${esc(labels[i])}</text>` : ""}`; }).join("");
+    const g = goal ? `<line x1="${pad.l}" x2="${w - pad.r}" y1="${y(goal)}" y2="${y(goal)}" stroke="#1447E6" stroke-dasharray="4 3" stroke-width="1.25"/><text x="${w - pad.r}" y="${y(goal) - 4}" text-anchor="end" font-size="${AXIS_PX}" fill="#1447E6">Goal</text>` : "";
+    return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto" role="img">${ticks}${bars}${g}</svg>`;
+  },
+  /* Lines. series: [{name, values, tone: 'strong'|'muted'}] */
+  line({ series, labels = [], w = 560, h = 180, fmt = (v) => v }) {
+    const pad = { l: 36, r: 8, t: 10, b: 22 };
+    const all = series.flatMap((s) => s.values); const max = Math.max(...all) * 1.12 || 1;
+    const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b, n = series[0].values.length;
+    const x = (i) => pad.l + (iw / (n - 1)) * i, y = (v) => pad.t + ih - (v / max) * ih;
+    const ticks = [0, max / 2, max].map((t) => `<line x1="${pad.l}" x2="${w - pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="#E5E7EB"/><text x="${pad.l - 6}" y="${y(t) + 3}" text-anchor="end" font-size="${AXIS_PX}" fill="${AXIS_INK}">${fmt(Math.round(t))}</text>`).join("");
+    const lines = series.map((s) => { const c = s.tone === "muted" ? "#8EC5FF" : "#155DFC";
+      const d = s.values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+      const area = s.tone === "muted" ? "" : `<path d="${d}L${x(n - 1)},${pad.t + ih}L${x(0)},${pad.t + ih}Z" fill="#155DFC" opacity=".06"/>`;
+      return `${area}<path d="${d}" fill="none" stroke="${c}" stroke-width="2" ${s.tone === "muted" ? 'stroke-dasharray="4 3"' : ""} stroke-linejoin="round"/>`; }).join("");
+    const lab = labels.map((l, i) => (l ? `<text x="${x(i)}" y="${h - 6}" text-anchor="middle" font-size="${AXIS_PX}" fill="#6A7282">${esc(l)}</text>` : "")).join("");
+    return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto" role="img">${ticks}${lines}${lab}</svg>`;
+  },
+  spark(values, { w = 88, h = 24 } = {}) {
+    const max = Math.max(...values), min = Math.min(...values), r = max - min || 1;
+    const d = values.map((v, i) => `${i ? "L" : "M"}${((w - 2) / (values.length - 1)) * i + 1},${h - 2 - ((v - min) / r) * (h - 4)}`).join("");
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><path d="${d}" fill="none" stroke="#155DFC" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+  },
+  /* Horizontal meter; value/max; goal marker optional */
+  meter(value, max, { goal, h = "h-1.5" } = {}) {
+    const p = Math.max(0, Math.min(100, (value / max) * 100));
+    return `<div class="relative ${h} rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-600" style="width:${p}%"></div>${goal != null ? `<span class="absolute inset-y-0 w-px bg-gray-800/50" style="left:${(goal / max) * 100}%"></span>` : ""}</div>`;
+  },
+  /* One stacked bar in blue shades; parts: [{label, value}] */
+  stack(parts, { h = "h-2.5" } = {}) {
+    const shades = ["bg-blue-600", "bg-blue-400", "bg-blue-300", "bg-blue-200", "bg-blue-100"];
+    const total = parts.reduce((a, p) => a + p.value, 0) || 1;
+    return `<div class="flex ${h} w-full overflow-hidden rounded-full bg-gray-100 gap-px">${parts.map((p, i) => `<div class="${shades[i % shades.length]}" style="width:${(p.value / total) * 100}%" title="${esc(p.label)}"></div>`).join("")}</div>
+      <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">${parts.map((p, i) => `<span class="inline-flex items-center gap-x-1.5 text-xs text-gray-600"><span class="size-2 rounded-sm ${shades[i % shades.length]}"></span>${esc(p.label)} <span class="text-gray-400 tabular-nums">${p.fmt || p.value}</span></span>`).join("")}</div>`;
+  }
+};
+
+/* ============================================================ side panels
+ * Every divider inside a panel runs the full width. Build panel bodies from psec() sections and pass
+ * flush: true; put tables that should touch both edges inside bleed(). */
+R.psec = "px-5 py-4 border-t border-gray-200/80";
+const psec = (title, body, { actions = "", count, cls = "" } = {}) => `<section class="${cx(R.psec, cls)}">${title ? `<div class="flex items-center justify-between gap-3 mb-2.5 min-h-6"><h3 class="${R.groupTitle} flex items-center gap-x-2">${title}${count != null ? ` <span class="${R.count}">${count}</span>` : ""}</h3>${actions ? `<div class="flex items-center gap-1.5">${actions}</div>` : ""}</div>` : ""}${body}</section>`;
+const bleed = (html) => `<div class="-mx-5">${html}</div>`;
+/* Label-over-value grid for a record's facts (cols per row) */
+const metaGrid = (items, cols = 3) => `<dl class="grid gap-x-6 gap-y-3" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${items.map(([k, v]) => `<div class="min-w-0"><dt class="text-xs text-gray-500">${k}</dt><dd class="mt-0.5 text-sm text-gray-800 truncate">${v}</dd></div>`).join("")}</dl>`;
+/* One line in a list of things to know: icon, text, optional right-hand bit */
+const infoRow = (icon, text, { tone = "gray", right = "" } = {}) => `<div class="flex items-start gap-x-2.5 py-1.5 text-sm text-gray-800">${I(icon, `size-4 mt-0.5 shrink-0 ${tone === "needs" ? "text-orange-500" : tone === "blue" ? "text-blue-600" : "text-gray-400"}`)}<div class="min-w-0 grow">${text}</div>${right ? `<div class="shrink-0 text-[13px] text-gray-500">${right}</div>` : ""}</div>`;
+function sheetInner({ title, subtitle = "", lead = "", tabs, tab = 0, body = "", footer = "", actions = "", flush = false, closeAttrs = "", marks = "" }) {
+  return `${recordHeader({ lead, title, sub: subtitle, marks, actions, end: iconButton("x", "Close", { s: "iconSm", attrs: closeAttrs }), tabs, tab })}
+    <div class="grow min-h-0 overflow-y-auto ${flush ? "[&>section:first-child]:border-t-0" : "px-5 py-4"}">${body}</div>
+    ${footer ? `<div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-200/80">${footer}</div>` : ""}`;
+}
+/* one header for a record, the same on its page and in its panels. Who or what it is and one line of facts on the
+ * left, marks that need attention next to the name, the record's actions then close (panel) or previous/next (page) on
+ * the same row; nothing above it. facts: [[label, value, more]] adds one line of key facts: one label and one
+ * value each, never a third line; "more" shows on hover; tabs sit at its
+ * foot. rule: false leaves off the bottom line when the page draws its own tab bar under it. */
+function recordHeader({ lead = "", title, sub = "", marks = "", actions = "", end = "", facts = null, tabs = null, tab = 0, size = "panel", rule = true }) {
+  const page = size === "page", H = page ? "h1" : "h2";
+  return `<header class="${cx("px-5 bg-white", page ? "pt-4" : "pt-3.5", !facts && !tabs && (page ? "pb-4" : "pb-3.5"), rule && "border-b border-gray-200/80")}">
+    <div class="flex items-start gap-3">${lead}<div class="min-w-0 grow"><div class="flex items-center gap-2 min-h-6"><${H} class="${page ? "text-lg" : "text-base"} font-semibold text-gray-800 truncate">${title}</${H}>${marks ? `<span class="flex items-center gap-2 shrink-0">${marks}</span>` : ""}</div>${sub ? `<p class="text-[13px] text-gray-500 truncate tabular-nums">${sub}</p>` : ""}</div>
+    <div class="${cx("flex items-center shrink-0", page ? "gap-1.5" : "gap-0.5 -me-2")}">${actions}${end}</div></div>
+    ${facts ? `<div class="flex gap-10 pt-3 ${tabs ? "pb-1" : "pb-3.5"}">${facts.map(([l, v, sb]) => `<div class="min-w-0"><p class="text-xs text-gray-500">${l}</p><p class="mt-0.5 text-sm font-medium text-gray-800 tabular-nums truncate"${sb ? ` data-tip="${esc(String(sb).replace(/<[^>]+>/g, ""))}"` : ""}>${v}</p></div>`).join("")}</div>` : ""}
+    ${tabs ? `<div class="${facts ? "" : "pt-2"}">${tabsBar(tabs, tab, "!border-0")}</div>` : ""}</header>`;
+}
+/* progressive disclosure. A surface shows what its most frequent job needs; the rest of a row's details open on hover
+ * in a card (Grid option peek: (row) => html) and the full record on click. The card sits just left of the panel the
+ * grid is in (so it never covers the panel), or beside the row on a page. One card for the whole page. */
+const Peek = {
+  el: null,
+  show(anchor, html) {
+    if (!html) return this.hide();
+    if (!this.el) { this.el = document.createElement("div"); this.el.setAttribute("role", "tooltip"); document.body.appendChild(this.el); }
+    const el = this.el; el.className = cx(R.popover, "fixed z-[80] w-72 p-3 text-[13px] text-gray-700 pointer-events-none"); el.innerHTML = html; el.hidden = false; icons();
+    const r = anchor.getBoundingClientRect(), panel = anchor.closest("aside"), w = el.offsetWidth, h = el.offsetHeight;
+    const left = panel ? panel.getBoundingClientRect().left - w - 8 : Math.min(innerWidth - w - 8, r.right - w - 8);
+    el.style.left = `${Math.max(8, left)}px`; el.style.top = `${Math.max(8, Math.min(innerHeight - h - 8, panel ? r.top : r.bottom + 4))}px`;
+  },
+  hide() { if (this.el) this.el.hidden = true; }
+};
+/* A peek card's body: a title line, then label/value lines */
+const peekCard = (title, pairs, note = "") => `<p class="font-medium text-gray-800 mb-1.5">${title}</p><dl class="space-y-1">${pairs.filter(([, v]) => v != null && v !== "").map(([k, v]) => `<div class="flex gap-3"><dt class="w-24 shrink-0 text-gray-500">${k}</dt><dd class="min-w-0 text-gray-800">${v}</dd></div>`).join("")}</dl>${note ? `<p class="mt-2 text-gray-500">${note}</p>` : ""}`;
+/* A mark next to a record's name: an icon with a hover label; needs: true for the one thing someone must act on */
+const recordMark = (icon, tip, needs = false) => `<span data-tip="${esc(tip)}" tabindex="0" class="inline-flex rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600/30">${I(icon, `size-4 ${needs ? "text-orange-500" : "text-gray-400"}`)}</span>`;
+/* the one Actions menu for a record. A white Actions button opens a searchable
+ * list grouped by what each action is about; the search has focus, arrow keys and Enter pick, Escape closes.
+ * groups: [{ label, items: [{ icon, label, hint, suggest, off, danger }] }]. hint: what it does (under the label when
+ * rich, on hover otherwise); suggest: why Asha suggests it right now (a sparkle with a hover); off: why it can't run
+ * yet (the row stays, greyed, with the reason on hover, so nothing silently disappears); a group without a label is a
+ * divider (put destructive actions there, last). up opens above the button, for panel footers.
+ * Placement (owner rule): the labelled Actions button (with the sparkle) sits bottom-left in a footer when a record has
+ * many actions; a menu at the top right of a header is a ⋯ (dots: true, up: false, align: "end") with the same list. */
+function actionsMenu(groups, { label = "Actions", up = true, align = "start", rich = false, w = 320, open = false, dots = false } = {}) {
+  const item = (it) => `<button type="button" role="menuitem" data-am-item data-label="${esc(`${it.label} ${it.hint || ""}`)}" ${it.off ? `aria-disabled="true" data-tip="${esc(it.off)}"` : it.hint && !rich ? `title="${esc(it.hint)}"` : ""} class="${cx(it.danger ? R.menuDanger : R.menuItem, rich && it.hint && "!h-auto py-1.5 !items-start", it.off && "opacity-50 !cursor-default")}">${I(it.icon || "dot", rich && it.hint ? "mt-0.5 shrink-0" : "shrink-0")}<span class="min-w-0 grow text-start">${rich && it.hint ? `<span class="block">${it.label}</span><span class="block text-xs text-gray-500 truncate">${it.hint}</span>` : `<span class="block truncate">${it.label}</span>`}</span>${it.suggest ? `<span data-tip="${esc(it.suggest)}" class="inline-flex shrink-0">${I("sparkles", "!size-3.5 !text-blue-600")}</span>` : ""}</button>`;
+  const list = groups.map((g) => `<div data-am-group role="group"${g.label ? ` aria-label="${esc(g.label)}"` : ""}>${g.label ? `<p class="${R.menuLabel}">${g.label}</p>` : `<div class="${R.menuSep}"></div>`}${g.items.map(item).join("")}</div>`).join("");
+  const trigger = dots ? iconButton("ellipsis", label === "Actions" ? "More actions" : label, { s: "iconSm", attrs: `data-am-btn aria-haspopup="menu" aria-expanded="${open}"` })
+    : button(label, { v: "white", s: "sm", icon: "sparkles", iconEnd: "chevron-down", cls: "[&_svg:first-child]:!text-blue-600 [&_svg:last-child]:text-gray-400 [&_svg:last-child]:transition-transform aria-expanded:[&_svg:last-child]:rotate-180", attrs: `data-am-btn aria-haspopup="menu" aria-expanded="${open}"` });
+  return `<div class="relative" data-am>${trigger}
+    <div data-am-menu role="menu" aria-label="${esc(label)}" class="${R.menu.replace("w-60 p-1", "")} absolute z-40 ${up ? "bottom-full mb-1.5" : "top-full mt-1.5"} ${align === "end" ? "end-0" : "start-0"} overflow-hidden" style="width:${w}px"${open ? "" : " hidden"}>
+      <div class="relative border-b border-gray-200/80"><span class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">${I("search", "size-4 text-gray-400")}</span><input data-am-search class="w-full h-10 ps-9 pe-3 text-[13px] bg-transparent outline-hidden placeholder:text-gray-400" placeholder="Search actions…" aria-label="Search actions" /></div>
+      <div class="max-h-80 overflow-y-auto p-1">${list}<p data-am-empty hidden class="px-2 py-3 text-[13px] text-gray-500">No actions match.</p></div></div></div>`;
+}
+/* A plain ⋯ menu: an icon button and a short list */
+const dotsMenu = (items, { label = "More actions", open = false } = {}) => `<div class="relative">${iconButton("ellipsis", label, { v: "white", s: "iconSm" })}${open ? `<div class="${R.menu} !w-52 absolute bottom-full mb-1.5 start-0 z-40" role="menu">${items.map(([ic, l, danger]) => `<button type="button" role="menuitem" class="${danger ? R.menuDanger : R.menuItem}">${I(ic)}${l}</button>`).join("")}</div>` : ""}</div>`;
+/* tables you type into, placed by a block's html() and brought to life by mountSheets(el) in its mount().
+ * fieldTable(rows): a record's fields, [{ label, value, type: "text" | "select" | "none", options, html(row) }];
+ * sheetTable(options): any Grid with sheet editing (preset "panel" unless given). */
+const SHEETS = new Map(); let SHEET_SEQ = 0;
+const fieldTable = (rows, o = {}) => { const id = `s${++SHEET_SEQ}`; SHEETS.set(id, { fields: rows, o }); return `<div data-sheet-host="${id}"></div>`; };
+const sheetTable = (o) => { const id = `s${++SHEET_SEQ}`; SHEETS.set(id, { o }); return `<div data-sheet-host="${id}"></div>`; };
+function mountSheets(root) {
+  root.querySelectorAll("[data-sheet-host]").forEach((h) => { if (h.dataset.mounted) return; const s = SHEETS.get(h.dataset.sheetHost); if (!s) return; h.dataset.mounted = "1";
+    SHEETS.delete(h.dataset.sheetHost);
+    h._grid = s.fields ? fieldGrid(h, s.fields, s.o) : new Grid(h, Object.assign({ preset: "panel", sheet: true, maxHeight: 4000 }, s.o)); });
+}
+// Tables placed with fieldTable/sheetTable come to life wherever they land: a block, a Sheet, a review page
+new MutationObserver((muts) => { if (!SHEETS.size) return;
+  for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1 && (n.matches("[data-sheet-host]") || n.querySelector("[data-sheet-host]"))) mountSheets(n.parentElement || n);
+}).observe(document.documentElement, { childList: true, subtree: true });
+function fieldGrid(host, rows, o = {}) {
+  return new Grid(host, Object.assign({ preset: "panel", head: false, sheet: true, maxHeight: 4000, title: "Fields", rows: rows.map((r, i) => ({ id: `f${i}`, ...r })),
+    columns: [{ key: "label", label: "Field", w: o.labelW || 140, render: (r) => `<span class="text-gray-500">${esc(r.label)}</span>` },
+      { key: "value", label: "Value", w: 160, grow: true, edit: (r) => (r.type === "none" ? null : r.type || "text"), options: (r) => r.options, placeholder: (r) => `Add ${r.label.replace(/^\w/, (m) => m.toLowerCase())}`, render: (r) => (r.html ? r.html(r) : esc(r.value)) }] }, o));
+}
+
+/* The same panel drawn in place (for pictures of a panel that's open) */
+const sheetPanel = (o) => `<aside class="flex flex-col h-full bg-white border-s border-gray-200/80 shadow-[-12px_0_32px_-12px_rgba(17,24,39,0.16)] ${o.cls || ""}" style="width:${o.w || 520}px" aria-label="${esc(String(o.title).replace(/<[^>]+>/g, ""))}">${sheetInner(o)}</aside>`;
+
+/* ============================================================ side sheet (one per page) */
+const Sheet = {
+  el: null,
+  ensure() {
+    if (this.el) return this.el;
+    const el = document.createElement("aside");
+    el.className = "sheet fixed inset-y-0 right-0 z-50 w-[520px] max-w-full bg-white border-s border-gray-200 shadow-[-12px_0_32px_-12px_rgba(17,24,39,0.16)] flex flex-col";
+    el.setAttribute("aria-label", "Details"); el.dataset.open = "0"; el.setAttribute("role", "dialog");
+    document.body.appendChild(el); this.el = el;
+    el.addEventListener("click", (e) => { if (e.target.closest('[data-act="close-sheet"]')) this.close(); });
+    // Escape closes the panel unless something inside it already used the key (a cell editor, a list, an Actions menu)
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !e.defaultPrevented && el.dataset.open === "1" && !e.target.closest?.('[data-role="edit"]')) this.close(); });
+    // composedPath still holds the clicked node when a typed table re-drew it during the click, so that isn't "outside"
+    document.addEventListener("mousedown", (e) => { if (el.dataset.open === "1" && !e.composedPath().includes(el) && !e.target.closest("[data-opens-sheet]")) this.close(); });
+    return el;
+  },
+  /* {title, subtitle, lead (html avatar), tabs:[...], tab:0, body (html), footer (html), flush}
+   * flush: the body is made of psec() sections whose dividers run edge to edge (the house rule). */
+  open(o) {
+    const el = this.ensure(); this.opener = document.activeElement;
+    el.innerHTML = sheetInner(Object.assign({}, o, { closeAttrs: 'data-act="close-sheet"' }));
+    el.dataset.open = "1"; icons();
+    el.querySelector('[data-act="close-sheet"]').focus({ preventScroll: true });
+  },
+  close() { if (!this.el) return; this.el.dataset.open = "0"; if (this.opener && this.opener.focus) this.opener.focus({ preventScroll: true }); }
+};
+
+/* ============================================================ Grid (Attio), reusable
+ * columns: [{ key, label, icon, w, num, edit, kind: 'text'|'num'|'money'|'date'|'list', render(row), value(row), open }]
+ * preset: "page" | "section" | "panel" | "form" (see GRID_PRESETS above); any option below overrides it.
+ * viewButton: false drops the "Title · count" button when count tabs already name the view; noun names
+ * the footer count ("entries", "orders").
+ * gutter: the side padding of the page the grid sits in (default 16). The grid runs edge to edge through it; pass
+ * 0 when the grid already touches both edges. box: true draws a full rounded border instead, for a grid that sits
+ * among other content in a section (a settings list, a specimen).
+ * For small tables in panels and dialogs: density "dense" (13px text, rows stay 36px) or "compact" (the
+ * AshaSpreadsheetTable density="compact": 28px rows, 8px cell padding, small uppercase headers on a light grey band,
+ * the same grey under a totals row), lines: false (row lines only),
+ * sortable: false, wrap (long text wraps instead of truncating), foot (a fixed totals row, one HTML string per
+ * column, instead of the calculation footer) and rowAttrs(row) (extra attributes on each <tr>).
+ * The first column is sticky and carries the row checkbox. A column with open:true renders a button
+ * that calls onOpen(row).
+ * sheet: true edits like a spreadsheet, the way AshaGrid does on the Lists pages: click an editable cell or type on it
+ * to edit; Enter saves and moves down, Tab saves and moves to the next editable cell, Escape cancels. A column's edit is
+ * true or "text", "select" (options: [...] or (row) => [...]), or (row) => one of those, for a table of a record's
+ * fields. A list cell opens with the search right in the cell and the list underneath (pick: "list" drops the search).
+ * placeholder(row) is the grey hint in an empty editable cell. arrow: "hover" (default: a list cell shows its arrow on
+ * hover and when selected), "always" or "none". onCommit(row, key, value, grid) runs after a change; return a message
+ * to mark the save as failed: the cell keeps the value with an orange icon, hover says why, click tries again. Saves
+ * are otherwise silent. head: false drops the header row; a column with grow: true takes the room left over.
+ * peek: (row) => html (use peekCard) shows the row's other details on hover, left of the panel the grid is in. */
+let GRID_SEQ = 0;
+const LIST_KINDS = new Set(["select", "multi"]);
+const listValues = (v) => (Array.isArray(v) ? v : v ? String(v).split(/,\s*/) : []);
+const CALC = { num: [null, "sum", "avg", "min", "max"], money: [null, "sum", "avg", "max"], text: [null, "filled", "empty"], list: [null, "filled", "empty"], date: [null, "latest", "earliest"] };
+const CALC_LABEL = { sum: "Sum", avg: "Average", min: "Min", max: "Max", filled: "Filled", empty: "Empty", latest: "Latest", earliest: "Earliest" };
+/* One data grid, four presentations. A table picks one by where it sits, then only overrides what it must.
+ *   page     the main list of a page: edge to edge, 36px rows, cell lines, toolbar, sorting, select, totals
+ *   section  a table among other content on a page: a card, 13px text, 36px rows, row lines only
+ *   panel    a table in a flyout, dialog or popover: a card, compact (28px rows, small uppercase headers), row lines
+ *   form     a money sheet (invoice lines, payments): compact with cell lines
+ */
+const GRID_PRESETS = {
+  page: {},
+  section: { box: true, density: "dense", lines: false, toolbar: false, selectable: false, addColumn: false, footer: false },
+  panel: { box: true, density: "compact", lines: false, toolbar: false, selectable: false, addColumn: false, footer: false, sortable: false },
+  form: { box: true, density: "compact", lines: true, toolbar: false, selectable: false, addColumn: false, footer: false, sortable: false }
+};
+class Grid {
+  constructor(root, o) {
+    this.root = root; o = Object.assign({}, GRID_PRESETS[o.preset] || {}, o); this.o = Object.assign({ gutter: 16, box: false, viewButton: true, noun: "count", density: "default", lines: true, sortable: true, wrap: false, foot: null, rowAttrs: null, title: "All", maxHeight: 420, searchPlaceholder: "Search", filters: [], calc: {}, selectable: true, toolbar: true, footer: true, primary: null, bulk: null, views: null, empty: null, rowKey: "id", addColumn: true, sheet: false, head: true, arrow: "hover", pick: "search", onCommit: null }, o);
+    this.instance = "g" + ++GRID_SEQ;
+    this.baseline = { sort: o.defaultSort ? { ...o.defaultSort } : null, filters: {} };
+    this.sort = this.baseline.sort && { ...this.baseline.sort }; this.filters = {}; this.q = ""; this.calc = { ...this.o.calc }; this.menu = false;
+    this.setRows(o.rows || []);
+    root.addEventListener("click", (e) => this.onClick(e));
+    root.addEventListener("dblclick", (e) => this.onDbl(e));
+    root.addEventListener("keydown", (e) => this.onKey(e));
+    if (o.peek) { // details on hover (progressive disclosure)
+      root.addEventListener("mouseover", (e) => { const tr = e.target.closest("tr.g-row"); if (tr && tr !== this.peekRow && !e.target.closest('[data-role="pick-menu"]')) { clearTimeout(this.peekT); this.peekRow = tr; this.peekT = setTimeout(() => Peek.show(tr, this.o.peek(this.visible[+tr.querySelector("td[data-r]").dataset.r])), 250); } });
+      root.addEventListener("mouseleave", () => { clearTimeout(this.peekT); this.peekRow = null; Peek.hide(); });
+    }
+    root.addEventListener("input", (e) => { if (e.target.dataset.role === "search") { this.q = e.target.value; this.active = null; this.render(); }
+      else if (e.target.dataset.role === "pick-search") { this.pickQ = e.target.value; this.pickHi = 0; this.drawPick(); } });
+    root.addEventListener("focusout", (e) => { if (this.redrawing) return; if (e.target.dataset.role === "edit" && this.editing) this.commit(e.target.value, null, !this.o.sheet);
+      else if (e.target.dataset.role === "pick-search" && this.editing && !this.root.contains(e.relatedTarget)) this.leaveList(false); });
+    if (this.o.sheet) {
+      this.failed = new Map();
+      root.addEventListener("mousedown", (e) => this.onDown(e));
+      // one highlight in a list: the mouse moves it, the same as the arrow keys
+      root.addEventListener("mouseover", (e) => { const o = e.target.closest("[data-pick]"); if (o && +o.dataset.pick !== this.pickHi) this.hiTo(+o.dataset.pick); });
+    }
+    document.addEventListener("mousedown", (e) => { if (this.menu && !e.target.closest(`[data-menu="${this.instance}"]`)) { this.menu = false; this.render(); } });
+    this.render();
+  }
+  get cols() { return this.o.columns; }
+  /* Rebuild a hand-made <table> (with a <thead>) through the Grid, in its place, so a panel, dialog or section table
+   * is the same component as the Lists pages. Keeps each cell's HTML and text colour, merged cells, a <tfoot>
+   * totals row and row data-* attributes, and sizes the columns from the widths the table had, scaled to `width`. */
+  static fromTable(table, host, o = {}) {
+    const heads = [...table.tHead.rows[0].cells], spans = heads.map((th) => th.colSpan || 1);
+    const starts = spans.map((_, i) => spans.slice(0, i).reduce((a, b) => a + b, 0));
+    const keep = (td) => { const c = [...td.classList].filter((k) => /^!?(text-(gray|blue|orange|red|green|white)|font-|tabular-nums|line-through|italic)/.test(k)).join(" ");
+      return c ? `<span class="${c}">${td.innerHTML}</span>` : td.innerHTML; };
+    const cellsOf = (tr) => { const out = heads.map(() => ""); let pos = 0; [...tr.cells].forEach((td) => { const i = starts.indexOf(pos); if (i >= 0) out[i] = keep(td); pos += td.colSpan || 1; }); return out; };
+    const text = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.textContent.replace(/\s+/g, " ").trim(); };
+    const rows = [...(table.tBodies[0]?.rows || [])].map((tr, i) => ({ id: i, cells: cellsOf(tr),
+      attrs: [...tr.attributes].filter((a) => a.name.startsWith("data-") || a.name.startsWith("aria-")).map((a) => `${a.name}="${esc(a.value)}"`).join(" ") }));
+    const foot = table.tFoot && table.tFoot.rows[0] ? cellsOf(table.tFoot.rows[0]) : null;
+    const isNum = (i) => /text-end|text-right/.test(heads[i].className) || (rows.some((r) => text(r.cells[i])) && rows.every((r) => /^([−\-–]?\$?[\d,.]+%?|—|–|)$/.test(text(r.cells[i]).replace(/\s/g, ""))));
+    /* Column widths: start from the widths the table had; if the card is narrower, take the space first from columns
+     * wider than their content, then from text columns. Number columns never shrink below their content. */
+    const nat = (el) => { const r = document.createRange(); r.selectNodeContents(el); return Math.ceil(r.getBoundingClientRect().width) + 26; };
+    const need = heads.map((th, i) => Math.max(nat(th), ...[...(table.tBodies[0]?.rows || [])].map((tr) => { let pos = 0, w = 0;
+      [...tr.cells].forEach((td) => { if (pos === starts[i] && (td.colSpan || 1) === spans[i]) w = nat(td); pos += td.colSpan || 1; }); return w; })));
+    const w = heads.map((th) => th.getBoundingClientRect().width), total = w.reduce((a, b) => a + b, 0);
+    let over = total - (o.width || total);
+    const take = (floor) => { const room = w.map((x, i) => Math.max(0, x - floor(i))), sum = room.reduce((a, b) => a + b, 0);
+      if (over <= 0 || !sum) return; const cut = Math.min(over, sum); w.forEach((_, i) => (w[i] -= (room[i] / sum) * cut)); over -= cut; };
+    take((i) => need[i]); take((i) => (isNum(i) ? need[i] : Math.min(need[i], 96)));
+    const label = (th) => { const sr = th.querySelector(".sr-only"); return sr && !th.textContent.replace(sr.textContent, "").trim() ? "" : th.innerHTML; };
+    const columns = heads.map((th, i) => ({ key: `c${i}`, label: label(th), w: Math.max(36, Math.floor(w[i])), num: isNum(i), kind: "text", render: (r) => r.cells[i], value: (r) => text(r.cells[i]) }));
+    const long = rows.some((r) => r.cells.some((c) => text(c).length > 56));
+    const g = new Grid(host, Object.assign({ columns, rows, title: text(heads.map((h) => h.textContent).join(" ")).slice(0, 60), toolbar: false, selectable: false, addColumn: false,
+      preset: "panel", sortable: false, maxHeight: 4000, foot, wrap: long, rowAttrs: (r) => r.attrs }, o));
+    /* Fit pass: every column grows to its widest cell; the widest text column gives up the room */
+    const t = host.querySelector("table.g-table"), avail = host.firstElementChild.clientWidth;
+    if (t && !long) {
+      const cellW = (i) => Math.max(0, ...[...t.querySelectorAll(`td[data-c="${i}"]`), ...t.querySelectorAll(`tfoot td:nth-child(${i + 1})`)].map((td) => td.scrollWidth));
+      const flex = columns.findIndex((c) => !c.num);
+      columns.forEach((c, i) => { if (i !== flex) c.w = g.colWidth(Object.assign(c, { w: Math.max(c.w, cellW(i)) }), i); });
+      if (flex >= 0) columns[flex].w = Math.max(64, avail - columns.reduce((a, c, i) => a + (i === flex ? 0 : c.w), 0));
+      g.render();
+    }
+    return g;
+  }
+  /* Cell classes for the density and row-lines-only settings; part is "th" or "td" */
+  fit(part = "td") { const d = this.o.density;
+    return cx(d === "dense" && (part === "th" ? "!h-9 !text-[13px]" : "!text-[13px]"),
+      d === "compact" && (part === "th" ? "!h-7 !px-2 !text-xs !font-semibold uppercase tracking-wide !bg-gray-50" : part === "foot" ? "!h-7 !px-2 !text-[13px] leading-none !bg-white"
+        : "!h-7 !px-2 !text-[13px] leading-none [&_button]:!h-6 [&_input]:!h-6 [&_select]:!h-6"), !this.o.lines && "!border-e-0"); }
+  /* Only a chip that wasn't on screen last render animates in */
+  chipClass(key) { this._chipsNow = this._chipsNow || new Set(); this._chipsNow.add(key); return this._chipsSeen && !this._chipsSeen.has(key) ? "asha-chip-in" : ""; }
+  /* A column is never narrower than its header: padding + icon + label + sort arrow (+ checkbox on the first) */
+  colWidth(c, ci) {
+    const ctx = Grid._ctx || (Grid._ctx = document.createElement("canvas").getContext("2d"));
+    ctx.font = '500 14px Inter, ui-sans-serif, system-ui, sans-serif';
+    const compact = this.o.density === "compact", label = String(c.label).replace(/<[^>]+>/g, "");
+    ctx.font = compact ? "600 12px Inter, ui-sans-serif, system-ui, sans-serif" : `500 ${this.o.density === "dense" ? 13 : 14}px Inter, ui-sans-serif, system-ui, sans-serif`;
+    const need = (compact ? 16 : 24) + 2 + (c.icon ? 20 : 0) + Math.ceil(ctx.measureText(compact ? label.toUpperCase() : label).width + (compact ? label.length * 0.3 : 0)) + (this.o.sortable ? 20 : 0) + (ci === 0 && this.o.selectable ? 26 : 0);
+    return Math.max(c.w, need);
+  }
+  setRows(rows) { this.data = rows.map((r) => ({ ...r })); this.sel = new Set(); this.active = null; this.editing = null; }
+  val(r, c) { return c.value ? c.value(r) : r[c.key]; }
+  rowsView() {
+    const q = this.q.trim().toLowerCase();
+    let rows = this.data.filter((r) => Object.entries(this.filters).every(([k, v]) => v == null || (this.o.filters.find((f) => f.key === k)?.match || ((row, val) => row[k] === val))(r, v))
+      && (!q || (this.o.searchText ? this.o.searchText(r) : this.cols.map((c) => this.val(r, c)).join(" ")).toLowerCase().includes(q)));
+    const s = this.sort;
+    if (s) { const c = this.cols.find((x) => x.key === s.key);
+      rows = [...rows].sort((a, b) => { const va = this.val(a, c), vb = this.val(b, c);
+        const ea = va === "" || va == null, eb = vb === "" || vb == null; if (ea && !eb) return 1; if (eb && !ea) return -1;
+        return (typeof va === "number" ? va - vb : String(va).localeCompare(String(vb))) * s.dir; }); }
+    return rows;
+  }
+  dirty() { return JSON.stringify(this.sort) !== JSON.stringify(this.baseline.sort) || JSON.stringify(this.filters) !== JSON.stringify(this.baseline.filters); }
+  cell(r, c, ci) {
+    if (this.o.sheet) { const s = this.sheetCell(r, c); if (s != null) return s; }
+    if (this.editing && this.editing.id === r[this.o.rowKey] && this.editing.key === c.key)
+      return `<input data-role="edit" class="w-full h-full bg-transparent outline-hidden text-sm text-gray-800 ${c.num ? "text-end tabular-nums" : ""}" value="${esc(r[c.key])}" aria-label="${esc(c.label)}" />`;
+    let inner = c.render ? c.render(r) : esc(r[c.key] ?? "");
+    if (c.open) inner = `<button type="button" data-act="open" data-opens-sheet data-id="${r[this.o.rowKey]}" class="min-w-0 truncate font-medium text-gray-800 hover:underline decoration-gray-300 underline-offset-4 cursor-pointer text-start">${inner}</button>`;
+    if (ci === 0 && this.o.selectable) inner = `<div class="flex items-center gap-x-2.5 min-w-0">${checkbox(this.sel.has(r[this.o.rowKey]), "Select row", `data-act="sel" data-id="${r[this.o.rowKey]}"`)}${c.lead ? c.lead(r) : ""}${inner}</div>`;
+    else if (ci === 0 && c.lead) inner = `<div class="flex items-center gap-x-2.5 min-w-0">${c.lead(r)}${inner}</div>`;
+    return inner;
+  }
+  /* ---- spreadsheet editing (sheet: true) ---- */
+  /* A list cell: "select" picks one (the list closes on a pick); "multi" picks several: chips in the cell, checkboxes in
+   * the list, which stays open while you tick; Enter ticks, Backspace in an empty search drops the last chip; Escape,
+   * Tab or clicking away keeps what you ticked. Values of a multi cell are arrays (a "a, b" string also works). */
+  editKind(c, r) { if (!r) return null; const k = typeof c.edit === "function" ? c.edit(r) : c.edit; return k === true ? "text" : k || null; }
+  optionsFor(c, r) { const o = (typeof c.options === "function" ? c.options(r) : c.options) || []; return o.map((x) => (typeof x === "string" ? { value: x, label: x } : x)); }
+  editCtx() { return { c: this.cols.find((x) => x.key === this.editing.key), r: this.data.find((x) => x[this.o.rowKey] === this.editing.id) }; }
+  sheetCell(r, c) {
+    const kind = this.editKind(c, r); if (!kind) return null;
+    const K = this.o.rowKey, ed = this.editing && this.editing.id === r[K] && this.editing.key === c.key, size = this.o.density === "default" ? "text-sm" : "text-[13px]";
+    const name = esc(String(c.label || r.label || "").replace(/<[^>]+>/g, ""));
+    const lab = (x) => (this.optionsFor(c, r).find((o) => o.value === x) || { label: x }).label;
+    if (ed && kind === "text") return `<input data-role="edit" class="w-full h-full bg-transparent outline-hidden ${size} text-gray-900 placeholder:text-gray-400 ${c.num ? "text-end tabular-nums" : ""}" value="${esc(this.editing.seed ?? (c.kind === "money" && r[c.key] !== "" && r[c.key] != null ? money(+r[c.key]) : r[c.key] ?? ""))}" placeholder="${esc(c.placeholder ? c.placeholder(r) : "")}" aria-label="${name}" />`;
+    if (ed && kind === "multi") return `<div class="flex items-center gap-1 min-w-0 overflow-hidden">${this.editing.draft.map((v) => `<span class="${cx(R.tag, R.tagGray)} shrink-0 !pe-0.5 gap-0.5">${esc(lab(v))}<button type="button" data-unpick="${esc(v)}" tabindex="-1" aria-label="Remove ${esc(lab(v))}" class="inline-flex size-4 items-center justify-center rounded-sm text-gray-500 hover:bg-gray-200 hover:text-gray-800 cursor-pointer">${I("x", "size-3")}</button></span>`).join("")}<input data-role="pick-search" role="combobox" aria-expanded="true" aria-controls="${this.instance}-pick" aria-label="${name}" class="min-w-12 grow bg-transparent outline-hidden ${size} text-gray-900 placeholder:text-gray-400" value="${esc(this.pickQ)}" placeholder="${this.editing.draft.length ? "" : "Search…"}" /></div>`;
+    if (ed && kind === "select" && this.o.pick === "search") { const cur = this.optionsFor(c, r).find((o) => o.value === r[c.key]);
+      return `<div class="flex items-center gap-1.5 min-w-0">${I("search", "size-3.5 shrink-0 text-gray-400")}<input data-role="pick-search" role="combobox" aria-expanded="true" aria-controls="${this.instance}-pick" aria-label="${name}" class="min-w-0 grow bg-transparent outline-hidden ${size} text-gray-900 placeholder:text-gray-400" value="${esc(this.pickQ)}" placeholder="${esc(cur ? cur.label : "Search…")}" /></div>`; }
+    const v = r[c.key], vals = kind === "multi" ? listValues(v) : null, empty = vals ? !vals.length : v === "" || v == null, fail = this.failed.get(`${r[K]}:${c.key}`);
+    const inner = empty ? (c.placeholder ? `<span class="text-gray-400">${esc(c.placeholder(r))}</span>` : "") : vals ? `<span class="inline-flex items-center gap-1">${vals.map((x) => `<span class="${cx(R.tag, R.tagGray)} shrink-0">${esc(lab(x))}</span>`).join("")}</span>` : c.render ? c.render(r) : esc(v);
+    const arrow = LIST_KINDS.has(kind) && this.o.arrow !== "none" ? `<span class="ms-auto inline-flex shrink-0">${I("chevron-down", cx("g-arrow size-3.5 text-gray-400", this.o.arrow === "always" && "g-arrow-on", ed && "g-arrow-open"))}</span>` : "";
+    const mark = fail ? `<button type="button" data-act="retry" data-cid="${esc(`${r[K]}:${c.key}`)}" data-tip="${esc(fail)} Click to try again." aria-label="Couldn't save. Try again" class="inline-flex shrink-0 cursor-pointer">${I("circle-alert", "size-3.5 text-orange-500")}</button>` : "";
+    return `<div class="flex items-center gap-1.5 min-w-0 ${c.num ? "justify-end" : ""}"><span class="min-w-0 truncate">${inner}</span>${mark}${arrow}</div>`;
+  }
+  pickItems() {
+    const { c, r } = this.editCtx(), q = this.o.pick === "search" ? (this.pickQ || "").trim().toLowerCase() : "";
+    const opts = this.optionsFor(c, r).filter((o) => !q || o.label.toLowerCase().includes(q));
+    this.pickList = opts; this.pickHi = Math.min(this.pickHi || 0, Math.max(0, opts.length - 1));
+    if (!opts.length) return `<p class="px-2 py-2 text-[13px] text-gray-500">No matches</p>`;
+    // a multi list ticks a box before the label; a single list checks after it
+    const multi = this.editing.kind === "multi", on = new Set(multi ? this.editing.draft : [r[c.key]]);
+    return opts.map((o, i) => { const sel = on.has(o.value);
+      const box = multi ? `<span class="${cx("inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] border", sel ? "bg-blue-600 border-blue-600 [&_svg]:!text-white" : "border-gray-300 bg-white")}">${sel ? I("check", "!size-3") : ""}</span>` : "";
+      return `<button type="button" role="option" tabindex="-1" aria-selected="${sel}" data-pick="${i}" data-hi="${i === this.pickHi ? 1 : 0}" class="${cx(R.menuItem, i === this.pickHi && "!bg-gray-100")}">${box}<span class="min-w-0 grow truncate text-start">${esc(o.label)}</span>${sel && !multi ? I("check", "!text-blue-600") : ""}</button>`; }).join("");
+  }
+  pickMenu() { return `<div data-role="pick-menu" id="${this.instance}-pick" role="listbox" class="${R.menu.replace("asha-pop ", "").replace("w-60", "w-max")} fixed z-50 max-h-64 overflow-y-auto" style="left:0;top:0;max-width:360px;visibility:hidden">${this.pickItems()}</div>`; }
+  hiTo(i) { this.pickHi = i; this.root.querySelectorAll("[data-pick]").forEach((b) => { const on = +b.dataset.pick === i; b.dataset.hi = on ? 1 : 0; b.classList.toggle("!bg-gray-100", on); }); }
+  /* Leaving a list (Escape, Tab, a click elsewhere): a multi cell keeps what was ticked; a single list changes nothing */
+  leaveList(refocus = true, move) { if (!this.editing) return; if (this.editing.kind === "multi") return this.commit(this.editing.draft, move, refocus); this.cancelEdit(refocus); if (move) { this.step(...move); this.render(); } }
+  drawPick() { const m = this.root.querySelector('[data-role="pick-menu"]'); if (!m) return; m.innerHTML = this.pickItems(); icons(); const hi = m.querySelector('[data-hi="1"]'); if (hi) hi.scrollIntoView({ block: "nearest" }); }
+  /* The list is fixed-positioned so a scrolling panel can't clip it; measured against its own origin so it also lands
+   * right inside a scaled preview frame. It animates in only after it's placed. */
+  placePick() { const m = this.root.querySelector('[data-role="pick-menu"]'), td = this.root.querySelector('td[data-active="1"]'); if (!m || !td) return;
+    m.style.left = "0px"; m.style.top = "0px"; const o = m.getBoundingClientRect(), t = td.getBoundingClientRect(), s = t.width / td.offsetWidth || 1;
+    m.style.minWidth = `${Math.max(220, td.offsetWidth)}px`; m.style.left = `${(t.left - o.left) / s}px`; m.style.top = `${(t.bottom - o.top) / s + 4}px`;
+    if (m.style.visibility) { m.style.visibility = ""; m.classList.add("asha-pop"); } }
+  focusGrid() { const g = this.root.querySelector('[data-role="grid"]'); if (g) g.focus({ preventScroll: true }); }
+  cancelEdit(refocus = true) { this.editing = null; this.render(); if (refocus) this.focusGrid(); }
+  choose(i, move) { const o = (this.pickList || [])[i]; if (!o) return this.editing && this.editing.kind === "multi" ? null : this.cancelEdit();
+    if (this.editing.kind === "multi") { const d = this.editing.draft, at = d.indexOf(o.value); at < 0 ? d.push(o.value) : d.splice(at, 1); this.pickQ = ""; this.pickHi = i; return this.render(); }
+    this.commit(o.value, move); }
+  /* Moves the selected cell: dr moves down/up a row; dc moves to the next/previous editable cell, row after row. */
+  step(dr, dc) { const rows = this.visible.length, cols = this.cols.length; if (!this.active || !rows) return false; const { r, c } = this.active;
+    if (dr) { this.active = { r: Math.min(rows - 1, Math.max(0, r + dr)), c }; return true; }
+    for (let i = r * cols + c + dc; i >= 0 && i < rows * cols; i += dc) { const rr = Math.floor(i / cols), cc = i % cols; if (this.editKind(this.cols[cc], this.visible[rr])) { this.active = { r: rr, c: cc }; return true; } }
+    return false; }
+  onDown(e) {
+    const p = e.target.closest("[data-pick]"); if (p) { e.preventDefault(); return this.choose(+p.dataset.pick); }
+    const u = e.target.closest("[data-unpick]"); if (u && this.editing) { e.preventDefault(); this.editing.draft = this.editing.draft.filter((v) => v !== u.dataset.unpick); return this.render(); }
+    if (e.target.closest('[data-act], [data-role="edit"], [data-role="pick-search"], [data-role="pick-menu"]')) return;
+    const td = e.target.closest("td[data-r]"); if (!td) return;
+    e.preventDefault();
+    const a = { r: +td.dataset.r, c: +td.dataset.c }, same = this.editing && this.active && this.active.r === a.r && this.active.c === a.c;
+    if (this.editing) { const inp = this.root.querySelector('[data-role="edit"]'); inp ? this.commit(inp.value) : this.leaveList(false); }
+    this.quiet = false;
+    if (same) return this.focusGrid(); // a second click on an open list closes it
+    this.active = a;
+    if (this.editKind(this.cols[a.c], this.visible[a.r])) this.startEdit(); else { this.render(); this.focusGrid(); }
+  }
+  pickKey(e) { const n = (this.pickList || []).length, back = e.shiftKey ? -1 : 1;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (n) this.pickHi = (this.pickHi + (e.key === "ArrowDown" ? 1 : -1) + n) % n; return this.drawPick(); }
+    const multi = this.editing.kind === "multi";
+    if (e.key === "Enter") { e.preventDefault(); return this.choose(this.pickHi, multi ? undefined : [1, 0]); }
+    if (multi && e.key === "Backspace" && !this.pickQ && this.editing.draft.length) { e.preventDefault(); this.editing.draft.pop(); return this.render(); }
+    if (e.key === "Tab") { e.preventDefault(); if (this.pickQ && !multi) return this.choose(this.pickHi, [0, back]); return this.leaveList(true, [0, back]); }
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); return this.leaveList(true); }
+  }
+  calcValue(c, rows) {
+    const m = this.calc[c.key]; if (!m) return null;
+    const vals = rows.map((r) => this.val(r, c));
+    const filled = vals.filter((v) => (Array.isArray(v) ? v.length : v !== "" && v != null)).length;
+    const f = c.kind === "money" ? (v) => money(v) : (v) => v;
+    let v;
+    if (m === "sum") v = f(vals.reduce((a, b) => a + (+b || 0), 0));
+    else if (m === "avg") v = rows.length ? (c.kind === "money" ? money(vals.reduce((a, b) => a + (+b || 0), 0) / rows.length) : (vals.reduce((a, b) => a + (+b || 0), 0) / rows.length).toFixed(1)) : "–";
+    else if (m === "min") v = rows.length ? f(Math.min(...vals)) : "–";
+    else if (m === "max") v = rows.length ? f(Math.max(...vals)) : "–";
+    else if (m === "filled") v = filled;
+    else if (m === "empty") v = rows.length - filled;
+    else { const s = vals.filter(Boolean).sort(); v = s.length ? fmtDate(m === "latest" ? s[s.length - 1] : s[0]) : "–"; }
+    return `<span class="text-gray-400">${CALC_LABEL[m]}</span> <span class="font-medium text-gray-700 tabular-nums">${v}</span>`;
+  }
+  toolbar() {
+    const chips = [];
+    for (const f of this.o.filters) { const v = this.filters[f.key]; if (v == null) continue; const opt = f.options.find((o) => o.value === v);
+      chips.push(`${condChip(f.label, "is", `${esc(opt ? opt.label : v)}`, `data-act="clear-filter" data-key="${f.key}"`, `Remove ${esc(f.label)} filter`, this.chipClass(`f:${f.key}=${v}`))}`); }
+    const defaultSort = JSON.stringify(this.sort) === JSON.stringify(this.baseline.sort);
+    if (this.sort && !defaultSort) { const col = this.cols.find((c) => c.key === this.sort.key);
+      chips.push(`${condChip("Sorted by", "", `${col.label} ${I(this.sort.dir > 0 ? "arrow-up" : "arrow-down", "size-3.5")}`, `data-act="clear-sort"`, `Remove sort`, this.chipClass(`s:${this.sort.key}`))}`); }
+    const menu = this.menu ? `<div class="absolute start-0 top-full mt-1 z-30 ${R.menu}" role="menu">${this.o.filters.map((f) => `<p class="${R.menuLabel}">${f.label} is…</p>${f.options.map((o) => `<button type="button" role="menuitem" class="${R.menuItem}" data-act="pick-filter" data-key="${f.key}" data-v="${esc(o.value)}">${o.tone ? `<span class="${cx(R.dot, TONE_DOT[o.tone])}"></span>` : ""}${esc(o.label)}${this.filters[f.key] === o.value ? I("check", "ms-auto !text-blue-600") : ""}</button>`).join("")}`).join(`<div class="${R.menuSep}"></div>`)}</div>` : "";
+    const p = this.o.primary;
+    return `<div class="flex items-center gap-2 py-2.5 flex-nowrap min-w-0">
+      ${!this.o.viewButton ? "" : `<button type="button" class="${cx(R.btn, R.sm, R.ghost, "-ms-2 shrink-0")}">${esc(this.o.title)} <span class="${R.count}">${this.data.length}</span>${I("chevron-down", "!text-gray-400")}</button>
+      <span class="h-5 shrink-0 border-s border-gray-200/80"></span>`}
+      ${searchBox(this.o.searchPlaceholder, { w: this.o.searchWidth || "w-48", value: this.q, attrs: 'data-role="search"' })}
+      ${chips.length ? `<div class="flex min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none]">${chips.join("")}</div>` : ""}
+      ${this.o.filters.length ? `<div class="relative shrink-0" data-menu="${this.instance}">${button("Filter", { v: "quiet", s: "sm", icon: "list-filter", attrs: `data-act="filter" aria-haspopup="menu" aria-expanded="${this.menu}"` })}${menu}</div>` : ""}
+      <div class="ms-auto flex shrink-0 items-center gap-1.5">
+        ${this.dirty() ? button("Discard", { v: "quiet", s: "sm", attrs: 'data-act="discard"' }) + button("Save view", { v: "soft", s: "sm", attrs: 'data-act="save"' }) + '<span class="h-5 mx-1 border-s border-gray-200/80"></span>' : ""}
+        ${this.o.toolbarExtra || ""}
+        ${iconButton("ellipsis", "More, including columns", { s: "iconSm" })}
+        ${p ? button(p.label, { v: "solid", s: "sm", icon: p.icon || "plus", attrs: 'data-act="new"' }) : ""}
+      </div></div>`;
+  }
+  render() {
+    const ae = document.activeElement, inside = ae && this.root.contains(ae);
+    const hadSearch = inside && ae.dataset.role === "search", hadGrid = inside && ae.dataset.role === "grid";
+    const rows = this.rowsView(); this.visible = rows; this._chipsNow = new Set();
+    const K = this.o.rowKey;
+    const allSel = rows.length && rows.every((r) => this.sel.has(r[K])), someSel = rows.some((r) => this.sel.has(r[K]));
+    const widths = this.cols.map((c, ci) => this.colWidth(c, ci));
+    const minW = widths.reduce((a, w) => a + w, 0) + (this.o.addColumn ? 56 : 0);
+    const head = this.cols.map((c, ci) => {
+      const sorted = this.sort && this.sort.key === c.key;
+      const lbl = !this.o.sortable ? `<span class="inline-flex ${ci ? "w-full" : ""} items-center gap-x-1.5 ${c.num ? "justify-end" : ""}">${c.icon ? I(c.icon, "size-3.5 shrink-0 text-gray-400") : ""}<span class="truncate">${c.label}</span></span>`
+        : `<button type="button" data-act="sort" data-key="${c.key}" class="inline-flex ${ci ? "w-full" : ""} items-center gap-x-1.5 cursor-pointer hover:text-gray-800 ${c.num ? "justify-end" : ""}">${c.icon ? I(c.icon, "size-3.5 shrink-0 text-gray-400") : ""}<span class="truncate">${c.label}</span>${sorted ? I(this.sort.dir > 0 ? "arrow-up" : "arrow-down", "size-3.5 shrink-0 text-blue-600") : ""}</button>`;
+      const inner = ci === 0 && this.o.selectable ? `<div class="flex items-center gap-x-2.5">${checkbox(allSel, "Select all", 'data-act="selall"')}${lbl}</div>` : lbl;
+      return `<th scope="col" class="${cx(R.gridHead, ci === 0 && "g-sticky", this.fit("th"))}" aria-sort="${sorted ? (this.sort.dir > 0 ? "ascending" : "descending") : "none"}">${inner}</th>`;
+    }).join("") + (this.o.addColumn ? `<th class="${R.gridHead} !border-e-0">${iconButton("plus", "Add column", { s: "iconXs" })}</th>` : "");
+    const fresh = this.fresh || new Set(), glow = this.glowRows || new Set();
+    const body = rows.map((r, ri) => `<tr class="g-row ${fresh.has(r[K]) ? "asha-row-in" : glow.has(r[K]) ? "asha-glow-cells" : ""}" ${this.o.rowAttrs ? this.o.rowAttrs(r) : ""} data-sel="${this.sel.has(r[K]) ? 1 : 0}" data-open="${this.openId === r[K] ? 1 : 0}">${this.cols.map((c, ci) => {
+      const act = this.active && this.active.r === ri && this.active.c === ci;
+      const glowCell = this.glowCell && this.glowCell.id === r[K] && this.glowCell.key === c.key;
+      const ek = this.o.sheet && this.editKind(c, r);
+      return `<td class="${cx(R.gridCell, ci === 0 && "g-sticky", c.num && "text-end tabular-nums", glowCell && "asha-glow", this.fit(), this.o.wrap && "!whitespace-normal !h-auto py-2 align-top", ek && (LIST_KINDS.has(ek) ? "cursor-pointer" : "cursor-text"))}" data-r="${ri}" data-c="${ci}" data-active="${act ? 1 : 0}"${ek ? ' data-edit="1"' : ""}>${this.cell(r, c, ci)}</td>`;
+    }).join("")}${this.o.addColumn ? `<td class="border-b border-gray-200/80"></td>` : ""}</tr>`).join("");
+    const foot = this.o.foot ? `<tr class="g-foot">${this.cols.map((c, ci) => `<td class="${cx(R.gridFoot, ci === 0 && "g-sticky", c.num && "text-end tabular-nums", this.o.density === "default" && "!h-9 !text-sm", this.o.density === "dense" && "!h-9", this.fit("foot"), "font-medium !text-gray-800")}">${this.o.foot[ci] || ""}</td>`).join("")}</tr>`
+      : `<tr class="g-foot">${this.cols.map((c, ci) => ci === 0
+      ? `<td class="${cx(R.gridFoot, "g-sticky")}"><span class="font-medium text-gray-700 tabular-nums">${rows.length}</span> <span class="text-gray-400">${esc(this.o.noun)}</span></td>`
+      : `<td class="${cx(R.gridFoot, c.num && "text-end")}"><button type="button" data-act="calc" data-key="${c.key}" class="w-full cursor-pointer ${c.num ? "text-end" : "text-start"} hover:text-gray-600">${this.calcValue(c, rows) || `<span class="g-addcalc">+ Add calculation</span>`}</button></td>`).join("")}${this.o.addColumn ? "<td></td>" : ""}</tr>`;
+    const e = this.o.empty || {};
+    const empty = !rows.length ? `<div class="${cx("border-b border-gray-200/80", this.o.box ? "border-x rounded-b-lg" : edgeToEdge(this.o.gutter))}">${this.data.length
+      ? emptyState({ icon: "search-x", title: "Nothing matches", body: "Try a different search or remove a filter.", action: button("Clear filters", { v: "white", s: "sm", attrs: 'data-act="clear-all"' }) })
+      : emptyState({ icon: e.icon || "inbox", title: e.title || "Nothing here yet", body: e.body || "", action: e.action ? button(e.action, { v: "white", s: "sm", icon: "plus", attrs: 'data-act="new"' }) : "" })}</div>` : "";
+    const n = this.sel.size, bulk = this.o.bulk || [{ label: "Export", icon: "download" }];
+    const markup = `${this.o.toolbar ? this.toolbar() : ""}
+      <div class="${cx(R.gridWrap, this.o.sheet && "g-sheet", this.o.box ? "!border rounded-lg [&_tr>*:last-child]:!border-e-0 bg-white" : edgeToEdge(this.o.gutter), this.o.box && (!(this.o.foot || this.o.footer) || this.o.foot) && "[&_tbody_tr:last-child>td]:!border-b-0")}" style="max-height:${this.o.maxHeight}px" tabindex="0" data-role="grid" role="grid" aria-label="${esc(this.o.title)}" aria-rowcount="${rows.length}">
+        <table class="g-table table-fixed w-full" style="min-width:${minW}px">
+          <colgroup>${widths.map((w, i) => (this.cols[i].grow ? "<col>" : `<col style="width:${w}px">`)).join("")}${this.o.addColumn ? "<col>" : ""}</colgroup>
+          ${this.o.head ? `<thead><tr>${head}</tr></thead>` : ""}<tbody>${body}</tbody>${rows.length && (this.o.foot || this.o.footer) ? `<tfoot>${foot}</tfoot>` : ""}
+        </table></div>${empty}${this.o.sheet && this.editing && LIST_KINDS.has(this.editing.kind) ? this.pickMenu() : ""}
+      ${this.o.selectable ? `<div class="${R.bulkBar}" style="${n ? "" : "opacity:0;pointer-events:none;transform:translate(-50%,12px)"}" role="toolbar" aria-label="Selected rows" ${n ? "" : 'aria-hidden="true"'}>
+        <span class="me-2 font-medium tabular-nums">${n} selected</span><span class="h-5 me-1 border-s border-white/15"></span>
+        ${bulk.map((b, i) => button(b.label, { v: "onDark", s: "sm", icon: b.icon, cls: b.danger ? "!text-red-300 hover:!bg-red-500/15" : "", attrs: `data-act="bulk" data-i="${i}"` })).join("")}
+        <span class="h-5 mx-1 border-s border-white/15"></span>
+        <button type="button" class="${cx(R.btn, R.sm, R.iconSm, R.onDark)}" data-act="bulk-clear" aria-label="Clear selection">${I("x")}</button></div>` : ""}`;
+    // the browser reports focus leaving the old cell while it's replaced; that isn't the user leaving
+    this.redrawing = true; try { this.root.innerHTML = markup; } finally { this.redrawing = false; }
+    const selAll = this.root.querySelector('[data-act="selall"]'); if (selAll) selAll.indeterminate = !allSel && someSel;
+    if (this.popSel != null) { Motion.play(this.root.querySelector(`[data-act="sel"][data-id="${this.popSel}"]`), "asha-check-pop"); this.popSel = null; }
+    this._chipsSeen = this._chipsNow; this.fresh = null; this.glowRows = null; this.glowCell = null;
+    icons();
+    if (hadSearch) { const s = this.root.querySelector('[data-role="search"]'); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    const ed = this.root.querySelector('[data-role="edit"], [data-role="pick-search"]');
+    // sheet cells open with the caret at the end of the text they showed (no select-all flash, nothing moves); list searches start empty
+    if (ed) { if (!this.quiet) ed.focus({ preventScroll: !!this.o.sheet }); if (this.o.sheet) ed.setSelectionRange(ed.value.length, ed.value.length); else ed.select(); }
+    else if (hadGrid) this.focusGrid();
+    const a = this.root.querySelector('[data-active="1"]'); if (a && (hadGrid || (ed && !this.quiet))) a.scrollIntoView({ block: "nearest", inline: "nearest" });
+    if (this.o.sheet) {
+      // at most one list is open on the page; the page-level listeners below act on it
+      if (this.editing && LIST_KINDS.has(this.editing.kind)) Grid.openList = this; else if (Grid.openList === this) Grid.openList = null;
+      this.placePick();
+    }
+  }
+  commit(value, move, refocus = true) {
+    const { id, key } = this.editing; this.editing = null;
+    const c = this.cols.find((x) => x.key === key); const row = this.data.find((r) => r[this.o.rowKey] === id);
+    const before = row && row[key];
+    if (row && value != null && String(row[key]) !== String(value)) this.glowCell = { id, key };
+    if (row && Array.isArray(value)) row[key] = [...value];
+    else if (row && value != null) { const n = parseFloat(String(value).replace(/[^0-9.\-]/g, "")); row[key] = c.kind === "num" || c.kind === "money" ? (isFinite(n) ? n : row[key]) : value.trim() || (c.required ? row[key] : ""); }
+    if (this.o.sheet) {
+      if (row && String(before ?? "") !== String(row[key] ?? "") && this.o.onCommit) { const why = this.o.onCommit(row, key, row[key], this); why ? this.failed.set(`${id}:${key}`, why) : this.failed.delete(`${id}:${key}`); }
+      if (move) this.step(...move);
+    }
+    this.render(); if (refocus) this.focusGrid();
+  }
+  startEdit(seed) { if (!this.active) return; const c = this.cols[this.active.c], r = this.visible[this.active.r], kind = this.editKind(c, r);
+    if (kind && r) { this.editing = { id: r[this.o.rowKey], key: c.key };
+      if (this.o.sheet) { Object.assign(this.editing, { kind, seed, draft: kind === "multi" ? [...listValues(r[c.key])] : null }); this.pickQ = LIST_KINDS.has(kind) && seed != null ? seed : ""; this.pickHi = seed != null ? 0 : Math.max(0, this.optionsFor(c, r).findIndex((o) => o.value === r[c.key])); }
+      this.render(); } }
+  onClick(e) {
+    const t = e.target.closest("[data-act]"); const act = t && t.dataset.act; const K = this.o.rowKey;
+    if (act) {
+      if (act === "retry") { const cid = t.dataset.cid, at = cid.lastIndexOf(":"), key = cid.slice(at + 1), row = this.data.find((r) => String(r[K]) === cid.slice(0, at));
+        const why = row && this.o.onCommit && this.o.onCommit(row, key, row[key], this); if (why) this.failed.set(cid, why); else { this.failed.delete(cid); if (row) this.glowCell = { id: row[K], key }; } return this.render(); }
+      const raw = t.dataset.id, id = this.data.some((r) => r[K] === raw) ? raw : +raw;
+      if (act === "sort") { const k = t.dataset.key; this.sort = this.sort && this.sort.key === k ? (this.sort.dir > 0 ? { key: k, dir: -1 } : null) : { key: k, dir: 1 }; return this.render(); }
+      if (act === "sel") { this.sel.has(id) ? this.sel.delete(id) : this.sel.add(id); if (this.sel.has(id)) this.popSel = id; return this.render(); }
+      if (act === "selall") { const all = this.visible.every((r) => this.sel.has(r[K])); this.visible.forEach((r) => (all ? this.sel.delete(r[K]) : this.sel.add(r[K]))); return this.render(); }
+      if (act === "open") { e.stopPropagation(); const row = this.data.find((r) => r[K] === id); this.openId = id; this.render(); if (this.o.onOpen) this.o.onOpen(row, this); return; }
+      if (act === "calc") { const c = this.cols.find((x) => x.key === t.dataset.key); const opts = CALC[c.kind || "text"]; this.calc[c.key] = opts[(opts.indexOf(this.calc[c.key] ?? null) + 1) % opts.length]; return this.render(); }
+      if (act === "filter") { this.menu = !this.menu; return this.render(); }
+      if (act === "pick-filter") { const k = t.dataset.key, v = t.dataset.v; this.filters[k] = this.filters[k] === v ? null : v; if (this.filters[k] == null) delete this.filters[k]; this.menu = false; return this.render(); }
+      if (act === "clear-filter") { delete this.filters[t.dataset.key]; return this.render(); }
+      if (act === "clear-sort") { this.sort = null; return this.render(); }
+      if (act === "clear-all") { this.filters = {}; this.q = ""; return this.render(); }
+      if (act === "discard") { this.sort = this.baseline.sort && { ...this.baseline.sort }; this.filters = { ...this.baseline.filters }; return this.render(); }
+      if (act === "save") { this.baseline = { sort: this.sort && { ...this.sort }, filters: { ...this.filters } }; return this.render(); }
+      if (act === "bulk-clear") { this.sel.clear(); return this.render(); }
+      if (act === "bulk") { const b = (this.o.bulk || [])[+t.dataset.i]; const picked = this.data.filter((r) => this.sel.has(r[K])), n = picked.length, snapshot = this.data.slice();
+        if (b && b.run) { b.run(picked, this); this.glowRows = new Set(picked.map((r) => r[K])); }
+        this.sel.clear(); this.render();
+        const what = `${n} ${n === 1 ? "row" : "rows"}`;
+        if (b && b.danger) return toast(`Deleted ${what}`, { icon: "trash-2", action: "Undo", onAction: () => { this.data = snapshot; this.fresh = new Set(picked.map((r) => r[K])); this.render(); } });
+        return; } // routine bulk actions: the row glow is the feedback
+      if (act === "new" && this.o.onNew) return this.o.onNew(this);
+      return;
+    }
+    const td = e.target.closest("td[data-r]");
+    if (td && !this.editing && !this.o.sheet) { this.active = { r: +td.dataset.r, c: +td.dataset.c }; this.render(); this.focusGrid(); }
+  }
+  onDbl(e) { const td = e.target.closest("td[data-r]"); if (td && !e.target.closest("[data-act]")) { this.active = { r: +td.dataset.r, c: +td.dataset.c }; this.startEdit(); } }
+  onKey(e) {
+    if (this.o.sheet && this.editing && LIST_KINDS.has(this.editing.kind) && /^(pick-search|grid)$/.test(e.target.dataset.role || "")) return this.pickKey(e);
+    if (e.target.dataset.role === "edit") {
+      if (this.o.sheet && (e.key === "Enter" || e.key === "Tab")) { e.preventDefault(); return this.commit(e.target.value, e.key === "Enter" ? [1, 0] : [0, e.shiftKey ? -1 : 1]); }
+      if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); this.commit(e.target.value); }
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); this.editing = null; this.render(); this.focusGrid(); }
+      return;
+    }
+    if (e.target.dataset.role !== "grid") return;
+    const rows = this.visible.length; if (!rows) return;
+    const a = this.active || { r: 0, c: 0 };
+    if (this.o.sheet && this.active) { const kind = this.editKind(this.cols[a.c], this.visible[a.r]);
+      if (e.key === "Tab") { if (this.step(0, e.shiftKey ? -1 : 1)) { e.preventDefault(); this.render(); } return; }
+      if (kind && e.key === "F2") { e.preventDefault(); return this.startEdit(); }
+      if (kind === "text" && (e.key === "Backspace" || e.key === "Delete")) { e.preventDefault(); return this.startEdit(""); }
+      if (kind && e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); return this.startEdit(e.key); } }
+    const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+    if (moves[e.key]) { e.preventDefault(); const [dr, dc] = moves[e.key]; this.active = this.active ? { r: Math.min(rows - 1, Math.max(0, a.r + dr)), c: Math.min(this.cols.length - 1, Math.max(0, a.c + dc)) } : a; return this.render(); }
+    if (e.key === "Enter" && this.active) { e.preventDefault(); const c = this.cols[a.c]; if (this.editKind(c, this.visible[a.r])) return this.startEdit(); if (this.o.onOpen) { const row = this.visible[a.r]; this.openId = row[this.o.rowKey]; this.render(); return this.o.onOpen(row, this); } }
+    if (e.key === " " && this.active && this.o.selectable) { e.preventDefault(); const id = this.visible[a.r][this.o.rowKey]; this.sel.has(id) ? this.sel.delete(id) : this.sel.add(id); return this.render(); }
+    if (e.key === "Escape") { this.active = null; return this.render(); }
+  }
+}
+
+// The one open list on the page (Grid.openList): a click outside its grid closes it, a scroll keeps it beside its cell.
+// composedPath still holds the clicked cell even when the grid re-drew it during that same click.
+document.addEventListener("mousedown", (e) => { const g = Grid.openList; if (g && g.editing && !e.composedPath().includes(g.root)) g.leaveList(false); });
+document.addEventListener("scroll", () => { if (Grid.openList) Grid.openList.placePick(); }, true);
+
+/* ============================================================ calendar
+ * A plain time grid like Google Calendar's day and week views: hours down the side, one column per day (or per person
+ * or room), events as tinted blocks you can click. It knows nothing about what an event is; the page that uses it does.
+ *   new Calendar(el, { date: "2026-09-25", view: "week" | "day", events, columns, from: 7, to: 19, now: "10:40",
+ *     weekdays: false, height: 640, toolbar: true, toolbarExtra: "", onOpen(event, el), onSlot({ date, col, time }) })
+ * date is today (Today returns to it; now draws the blue line on it). weekdays: true shows Monday to Friday.
+ * events: [{ id, title, detail, date ("YYYY-MM-DD"; leave it out to mean `date`), col (with columns), start "9:30",
+ *   end "10:15" or dur (minutes), color: "blue" | "indigo" | "teal" | "sky" | "gray", faded, cancelled }]
+ * columns: [{ id, label, sub }] splits one day by person or room; the Day/Week switch is hidden then.
+ * Overlapping events sit side by side. cal.setEvents(list) redraws; cal.go(date, view) moves. */
+const CAL_TONE = {
+  blue: "bg-blue-50 border-blue-500 text-blue-900 hover:bg-blue-100",
+  indigo: "bg-indigo-50 border-indigo-500 text-indigo-900 hover:bg-indigo-100",
+  teal: "bg-teal-50 border-teal-500 text-teal-900 hover:bg-teal-100",
+  sky: "bg-sky-50 border-sky-500 text-sky-900 hover:bg-sky-100",
+  gray: "bg-gray-100 border-gray-400 text-gray-700 hover:bg-gray-200"
+};
+const CAL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const CAL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const calIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const calDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
+const calAdd = (iso, n) => { const d = calDate(iso); d.setDate(d.getDate() + n); return calIso(d); };
+const calMin = (t) => (typeof t === "number" ? t : (([h, m]) => h * 60 + (m || 0))(String(t).split(":").map(Number)));
+/* "9am", "10:30am", "12pm" */
+const calClock = (m) => { const h = Math.floor(m / 60) % 24, mm = m % 60; return `${((h + 11) % 12) + 1}${mm ? `:${String(mm).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+const calRange = (s, e) => { const a = calClock(s), b = calClock(e); return (a.slice(-2) === b.slice(-2) ? a.slice(0, -2) : a) + "–" + b; };
+class Calendar {
+  constructor(el, o = {}) {
+    this.el = el; this.o = Object.assign({ view: "week", from: 7, to: 19, height: 640, toolbar: true, weekdays: false, events: [], toolbarExtra: "" }, o);
+    this.today = this.o.date || calIso(new Date()); this.date = this.today; this.view = this.o.columns ? "day" : this.o.view; this.events = this.o.events;
+    el.addEventListener("click", (e) => this.click(e));
+    this.render(); this.scrollToNow();
+  }
+  static HOUR = 48;
+  setEvents(list) { this.events = list; this.render(); }
+  go(date = this.date, view = this.view) { this.date = date; this.view = this.o.columns ? "day" : view; this.render(); }
+  days() {
+    if (this.view === "day") return [this.date];
+    const first = calAdd(this.date, -calDate(this.date).getDay() + (this.o.weekdays ? 1 : 0));
+    return Array.from({ length: this.o.weekdays ? 5 : 7 }, (_, i) => calAdd(first, i));
+  }
+  cols() { return this.o.columns ? this.o.columns.map((c) => ({ ...c, date: this.date })) : this.days().map((d) => ({ id: d, date: d })); }
+  title() {
+    const d = calDate(this.date);
+    if (this.view === "day") return `${CAL_DAYS[d.getDay()]}, ${CAL_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    const ds = this.days(), a = calDate(ds[0]), b = calDate(ds[ds.length - 1]);
+    return a.getMonth() === b.getMonth() ? `${CAL_MONTHS[a.getMonth()]} ${a.getFullYear()}` : `${MONTHS[a.getMonth()]} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`;
+  }
+  /* Events in one column, each with its lane: overlapping events share the width */
+  placed(col) {
+    const list = this.events.filter((ev) => (ev.date || this.today) === col.date && (!this.o.columns || ev.col === col.id))
+      .map((ev) => { const s = calMin(ev.start); return { ev, s, e: ev.end != null ? calMin(ev.end) : s + (ev.dur || 30) }; })
+      .sort((a, b) => a.s - b.s || b.e - a.e);
+    let group = [], groupEnd = -1;
+    const close = () => { const n = Math.max(...group.map((x) => x.lane)) + 1; group.forEach((x) => (x.lanes = n)); group = []; };
+    for (const x of list) {
+      if (x.s >= groupEnd && group.length) close();
+      const ends = []; group.forEach((y) => { ends[y.lane] = Math.max(ends[y.lane] ?? -1, y.e); });
+      x.lane = ends.findIndex((end) => end <= x.s); if (x.lane < 0) x.lane = ends.length;
+      group.push(x); groupEnd = Math.max(groupEnd, x.e);
+    }
+    if (group.length) close();
+    return list;
+  }
+  eventHtml({ ev, s, e, lane, lanes }) {
+    const H = Calendar.HOUR, from = this.o.from * 60, top = ((s - from) / 60) * H, h = Math.max(18, ((e - s) / 60) * H - 2);
+    const time = calRange(s, e), label = [ev.title, time, ev.detail].filter(Boolean).join(", ");
+    const body = h < 30 ? `<span class="block truncate"><span class="font-medium">${esc(ev.title)}</span><span class="opacity-75">, ${time}</span></span>`
+      : `<span class="block truncate font-medium">${esc(ev.title)}</span><span class="block truncate opacity-75 tabular-nums">${time}</span>${ev.detail && h >= 54 ? `<span class="block truncate opacity-75">${esc(ev.detail)}</span>` : ""}`;
+    return `<button type="button" data-cal-event="${esc(ev.id)}" aria-label="${esc(label)}" class="${cx("absolute rounded-md border-s-[3px] px-1.5 py-0.5 text-start text-xs leading-4 overflow-hidden cursor-pointer transition-colors duration-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600/40", CAL_TONE[ev.color] || CAL_TONE.blue, ev.faded && "opacity-60", ev.cancelled && "line-through opacity-60")}"
+      style="top:${top + 1}px;height:${h}px;left:calc(${(lane / lanes) * 100}% + 2px);width:calc(${100 / lanes}% - 6px)">${body}</button>`;
+  }
+  render() {
+    const o = this.o, H = Calendar.HOUR, hours = o.to - o.from, cols = this.cols();
+    const head = (c) => { if (o.columns) return `<div class="flex flex-col justify-center min-w-0 px-2 h-14"><p class="text-sm font-medium text-gray-800 truncate">${esc(c.label)}</p>${c.sub ? `<p class="text-xs text-gray-500 truncate">${esc(c.sub)}</p>` : ""}</div>`;
+      const d = calDate(c.date), today = c.date === this.today;
+      return `<div class="flex flex-col items-center justify-center h-14 gap-0.5"><span class="text-[11px] font-medium uppercase ${today ? "text-blue-600" : "text-gray-500"}">${CAL_DAYS[d.getDay()].slice(0, 3)}</span><span class="flex items-center justify-center size-7 rounded-full text-base tabular-nums ${today ? "bg-blue-600 font-semibold text-white" : "text-gray-800"}">${d.getDate()}</span></div>`; };
+    const nowLine = (c) => { if (o.now == null || c.date !== this.today) return ""; const t = ((calMin(o.now) - o.from * 60) / 60) * H; if (t < 0 || t > hours * H) return "";
+      return `<div class="pointer-events-none absolute inset-x-0 z-[5] border-t-2 border-blue-600" style="top:${t}px" aria-hidden="true"><span class="absolute -top-[5px] -start-[5px] size-2 rounded-full bg-blue-600"></span></div>`; };
+    const tmpl = `56px repeat(${cols.length}, minmax(${o.columns ? 140 : 96}px, 1fr))`;
+    this.el.innerHTML = `${o.toolbar ? `<div class="flex items-center gap-2 h-13 px-4 border-b border-gray-200/80">
+        ${button("Today", { v: "white", s: "sm", attrs: 'data-cal="today"' })}<div class="flex">${iconButton("chevron-left", this.view === "day" ? "Previous day" : "Previous week", { s: "iconSm", attrs: 'data-cal="prev"' })}${iconButton("chevron-right", this.view === "day" ? "Next day" : "Next week", { s: "iconSm", attrs: 'data-cal="next"' })}</div>
+        <h2 class="ms-1 text-base font-semibold text-gray-800 truncate">${this.title()}</h2><span class="grow"></span>${o.toolbarExtra}
+        ${o.columns ? "" : `<div data-cal-view>${segmented(["Day", "Week"], this.view === "day" ? 0 : 1, { sm: true, attrs: 'aria-label="View"' })}</div>`}</div>` : ""}
+      <div data-cal-scroll class="overflow-auto" style="max-height:${o.height}px">
+        <div class="grid sticky top-0 z-10 bg-white border-b border-gray-200/80" style="grid-template-columns:${tmpl}"><div></div>${cols.map((c) => `<div class="border-s border-gray-200/80 min-w-0">${head(c)}</div>`).join("")}</div>
+        <div class="grid" style="grid-template-columns:${tmpl}">
+          <div class="relative" style="height:${hours * H}px">${Array.from({ length: hours - 1 }, (_, i) => `<span class="absolute end-2 -translate-y-1/2 text-[11px] text-gray-500 tabular-nums" style="top:${(i + 1) * H}px">${calClock((o.from + i + 1) * 60)}</span>`).join("")}</div>
+          ${cols.map((c) => `<div data-cal-col="${esc(c.id)}" data-date="${c.date}" class="relative border-s border-gray-200/80" style="height:${hours * H}px;background-image:linear-gradient(to bottom, rgb(229 231 235 / .8) 1px, transparent 1px);background-size:100% ${H}px">${this.placed(c).map((x) => this.eventHtml(x)).join("")}${nowLine(c)}</div>`).join("")}
+        </div></div>`;
+    icons();
+  }
+  scrollToNow() { const sc = this.el.querySelector("[data-cal-scroll]"); if (!sc || this.o.now == null) return; sc.scrollTop = Math.max(0, ((calMin(this.o.now) - this.o.from * 60) / 60) * Calendar.HOUR - 96); }
+  click(e) {
+    const nav = e.target.closest("[data-cal]");
+    if (nav) { const k = nav.dataset.cal, step = this.view === "day" ? 1 : 7; return this.go(k === "today" ? this.today : calAdd(this.date, k === "prev" ? -step : step)); }
+    const v = e.target.closest("[data-cal-view] [data-seg]"); if (v) return this.go(this.date, v.dataset.seg === "0" ? "day" : "week");
+    const evEl = e.target.closest("[data-cal-event]");
+    if (evEl) { const ev = this.events.find((x) => String(x.id) === evEl.dataset.calEvent); if (ev && this.o.onOpen) this.o.onOpen(ev, evEl); return; }
+    const col = e.target.closest("[data-cal-col]");
+    if (col && this.o.onSlot) { const y = e.clientY - col.getBoundingClientRect().top, time = this.o.from * 60 + Math.floor((y / Calendar.HOUR) * 4) * 15;
+      this.o.onSlot({ date: col.dataset.date, col: col.dataset.calCol, time }); }
+  }
+}
+
+/* Actions menu behaviour: open/close, search, arrow keys, Enter, Escape, click outside */
+(() => {
+  const btn = (am) => am.querySelector("[data-am-btn]"), menu = (am) => am.querySelector("[data-am-menu]");
+  const usable = (am) => [...am.querySelectorAll("[data-am-item]")].filter((b) => !b.hidden && b.getAttribute("aria-disabled") !== "true");
+  const hi = (am, i) => { const l = usable(am); am._hi = l.length ? (i + l.length) % l.length : -1; l.forEach((b, j) => b.classList.toggle("!bg-gray-100", j === am._hi)); if (l[am._hi]) l[am._hi].scrollIntoView({ block: "nearest" }); };
+  const filter = (am, q) => { q = q.trim().toLowerCase();
+    am.querySelectorAll("[data-am-item]").forEach((b) => (b.hidden = !!q && !b.dataset.label.toLowerCase().includes(q)));
+    am.querySelectorAll("[data-am-group]").forEach((g) => (g.hidden = ![...g.querySelectorAll("[data-am-item]")].some((b) => !b.hidden)));
+    am.querySelector("[data-am-empty]").hidden = [...am.querySelectorAll("[data-am-item]")].some((b) => !b.hidden); hi(am, q ? 0 : -1); };
+  const close = (am, refocus) => { if (menu(am).hidden) return; menu(am).hidden = true; btn(am).setAttribute("aria-expanded", "false"); if (refocus) btn(am).focus({ preventScroll: true }); };
+  const open = (am) => { document.querySelectorAll("[data-am]").forEach((x) => x !== am && close(x)); const s = am.querySelector("[data-am-search]");
+    menu(am).hidden = false; btn(am).setAttribute("aria-expanded", "true"); s.value = ""; filter(am, ""); s.focus({ preventScroll: true }); };
+  document.addEventListener("click", (e) => { const b = e.target.closest("[data-am-btn]"); if (b) { const am = b.closest("[data-am]"); return menu(am).hidden ? open(am) : close(am, true); }
+    const it = e.target.closest("[data-am-item]"); if (it && it.getAttribute("aria-disabled") !== "true") close(it.closest("[data-am]"), true); });
+  document.addEventListener("input", (e) => { if (e.target.matches("[data-am-search]")) filter(e.target.closest("[data-am]"), e.target.value); });
+  document.addEventListener("keydown", (e) => { const am = e.target.closest && e.target.closest("[data-am]"); if (!am || menu(am).hidden) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); hi(am, (am._hi ?? -1) + (e.key === "ArrowDown" ? 1 : -1)); }
+    else if (e.key === "Enter" && e.target.matches("[data-am-search]")) { e.preventDefault(); const l = usable(am); if (l[am._hi]) l[am._hi].click(); }
+    else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(am, true); } });
+  document.addEventListener("mousedown", (e) => document.querySelectorAll("[data-am]").forEach((am) => { if (!am.contains(e.target)) close(am); }));
+})();
+
+/* Global delegated behaviour for switches and segmented controls (visual only) */
+document.addEventListener("click", (e) => {
+  const s = e.target.closest('[data-act="switch"]');
+  if (s) { s.setAttribute("aria-checked", s.getAttribute("aria-checked") === "true" ? "false" : "true"); Motion.settle(s.closest("[data-row], .min-h-11, li, tr") || s.parentElement); }
+  const seg = e.target.closest("[data-seg]");
+  if (seg) {
+    const wrap = seg.parentElement, sm = wrap.className.includes("h-8"), prev = wrap.querySelector('[aria-selected="true"]');
+    [...wrap.children].forEach((b) => { const on = b === seg; b.className = on ? (sm ? R.segOnSm : R.segOn) : (sm ? R.segItemSm : R.segItem); b.setAttribute("aria-selected", on); });
+    Motion.glide(wrap, prev, seg, "thumb");
+  }
+});
+
+document.addEventListener("change", (e) => { const c = e.target; if (c.classList && (c.classList.contains("cbx") || c.classList.contains("rad")) && c.checked) Motion.play(c, "asha-check-pop"); });
+
+/* Joined date stepper: one bordered group, ‹ label ›, like Preline's inline button group */
+const dateStepper = (label, { prev = "Previous", next = "Next" } = {}) => `<div class="inline-flex h-8 shrink-0 items-stretch overflow-hidden rounded-lg border border-gray-200 bg-white text-sm text-gray-800 shadow-2xs divide-x divide-gray-200">
+  <button type="button" class="px-2 text-gray-500 hover:bg-gray-50" aria-label="${esc(prev)}">${I("chevron-left", "size-4")}</button>
+  <button type="button" class="px-3 font-medium whitespace-nowrap hover:bg-gray-50">${label}</button>
+  <button type="button" class="px-2 text-gray-500 hover:bg-gray-50" aria-label="${esc(next)}">${I("chevron-right", "size-4")}</button></div>`;
+/* One step bar: items [[label, "done" | "problem" | "next"]], cur = the open step. Every step is a button. */
+const stepBar = (items, cur = 0, { cls = "px-5 py-2 border-b border-gray-200/80" } = {}) => `<nav data-steps class="flex items-center gap-1 overflow-x-auto ${cls}" aria-label="Steps">${items.map(([label, st], i) => {
+  const on = i === cur;
+  const mark = st === "done" ? `<span class="flex size-5 items-center justify-center rounded-full bg-blue-600 text-white">${I("check", "size-3")}</span>`
+    : `<span class="flex size-5 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums ${on ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}">${i + 1}</span>`;
+  return `${i ? '<span class="w-4 shrink-0 border-t border-gray-300" aria-hidden="true"></span>' : ""}<button type="button" data-step="${i}" class="inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-2 text-sm ${on ? "bg-gray-100 font-medium text-gray-900" : "text-gray-600 hover:bg-gray-50"}" ${on ? 'aria-current="step"' : ""}>${mark}${label}</button>`;
+}).join("")}</nav>`;
+/* Label / value rows: grey label, dark value, row lines only, no label fill and no line between label and value */
+const kvTable = (pairs, { cols = 1 } = {}) => {
+  const rows = []; for (let i = 0; i < pairs.length; i += cols) rows.push(pairs.slice(i, i + cols));
+  const col = '<col class="w-36"><col>';
+  return `<div class="${R.tableBox}"><table class="w-full table-fixed border-separate border-spacing-0 text-sm"><colgroup>${col.repeat(cols)}</colgroup><tbody>${rows.map((r) => `<tr>${r.map(([k, v]) => `<td class="h-9 ps-3 pe-2 border-b border-gray-200/80 text-[13px] text-gray-500 whitespace-nowrap">${k}</td><td class="h-9 pe-3 border-b border-gray-200/80 text-gray-800 truncate">${v}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+};
+/* A money breakdown as a full-width table: one amount column on the right edge, the total under one line */
+const moneySteps = (rows, total) => `<div class="${R.tableBox}"><table class="w-full border-separate border-spacing-0 text-[13px]"><tbody>${rows.map(([l, a, why]) => `<tr><td class="h-9 px-3 border-b border-gray-200/80 text-gray-700">${l}${why ? ` <span class="text-gray-400">· ${why}</span>` : ""}</td><td class="h-9 px-3 border-b border-gray-200/80 text-end tabular-nums text-gray-800">${money(a)}</td></tr>`).join("")}</tbody>${total ? `<tfoot><tr><td class="h-9 px-3 font-medium text-gray-800">${total[0]}</td><td class="h-9 px-3 text-end tabular-nums font-semibold text-gray-900">${money(total[1])}</td></tr></tfoot>` : ""}</table></div>`;
+/* Hover labels for icon-only marks, such as the status icons on calendar events: give the element data-tip="Label".
+ * One shared tooltip lives on <body>, so a card's overflow never clips it. It shows on hover and on keyboard focus;
+ * focusing a control that holds marks (a calendar event) shows all their labels beside them. */
+(() => {
+  let tip = null, on = null, byFocus = false;
+  const hide = () => { if (tip) tip.style.display = "none"; on = null; byFocus = false; };
+  const show = (el, text = el.dataset.tip) => {
+    if (!tip) { tip = document.createElement("div"); tip.setAttribute("role", "tooltip"); tip.className = `${R.tooltip} fixed z-[90] pointer-events-none whitespace-nowrap`; document.body.appendChild(tip); }
+    on = el; tip.textContent = text; tip.style.display = "";
+    const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2))}px`;
+    tip.style.top = `${r.top - h - 6 < 8 ? r.bottom + 6 : r.top - h - 6}px`;
+  };
+  document.addEventListener("pointerover", (e) => { const el = e.target.closest?.("[data-tip]"); if (el) { if (el !== on) show(el); } else if (on) hide(); });
+  document.addEventListener("focusin", (e) => {
+    const el = e.target.closest?.("[data-tip]"), marks = el ? [] : [...(e.target.querySelectorAll?.("[data-tip]") || [])];
+    if (el) show(el); else if (marks.length) show(marks[0].parentElement, marks.map((m) => m.dataset.tip).join(" · ")); else return hide();
+    byFocus = true;
+  });
+  document.addEventListener("focusout", hide);
+  // Focus scrolls its target into view: follow it. A pointer tooltip just closes.
+  document.addEventListener("scroll", () => { if (on && byFocus) show(on, tip.textContent); else hide(); }, true);
+})();
+
+</script>
+<script>
+/* ---- kit-extras.js (date picker, typed times) ---- */
+/* Pieces the design-system library doesn't have yet, drawn the way the production app draws them. Load this after
+ * kit.js (the prototypes' build.py does). The library itself stays untouched.
+ *
+ * DatePicker: the app's standard date picker (asha-ui's AshaDatePicker): a small popover under the field, month and arrows on top, Su–Sa, today ringed, the chosen day
+ *   blue. A pick calls onPick and closes. Esc or a click outside closes it.
+ *     DatePicker.open(anchorEl, { value: new Date(2026, 8, 25), today: new Date(2026, 8, 25), onPick: (d) => ... })
+ *   dayLabel(d) gives the app's short form: "Fri, Sep 25".
+ *
+ * parseClock(text): a typed time to minutes after midnight, or null. Takes "10:15", "1015", "10.15", "2pm", "2 p",
+ *   "7". Without am or pm, 1 to 6 o'clock means the afternoon (nobody books a 3 AM meeting). clockLabel(minutes)
+ *   gives "2:00 PM". Pair it with a select of open times: what's typed goes first, Enter takes it. */
+const DAY3 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dayLabel = (d) => `${DAY3[d.getDay()]}, ${MON3[d.getMonth()]} ${d.getDate()}`;
+const sameDay = (a, b) => !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+function parseClock(q) {
+  const m = String(q || "").trim().toLowerCase().replace(/\s+/g, "").match(/^(\d{1,2})(?:[:.]?(\d{2}))?(a|am|p|pm)?$/);
+  if (!m) return null;
+  let h = +m[1]; const mi = m[2] ? +m[2] : 0;
+  if (h > 23 || mi > 59) return null;
+  if (m[3]) { if (h < 1 || h > 12) return null; h = (h % 12) + (m[3][0] === "p" ? 12 : 0); } else if (h >= 1 && h <= 6) h += 12;
+  return h * 60 + mi;
+}
+const clockLabel = (mins) => { const h = Math.floor(mins / 60), m = mins % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
+
+const DatePicker = {
+  el: null, o: null, month: null,
+  monthHTML() {
+    const { value, today } = this.o, month = this.month;
+    const first = new Date(month.getFullYear(), month.getMonth(), 1), start = new Date(first); start.setDate(1 - first.getDay());
+    const days = Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+    const nav = (dir, icon, label) => `<button type="button" data-cal-nav="${dir}" aria-label="${label}" class="absolute ${dir < 0 ? "left-1" : "right-1"} inline-flex size-7 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600/30">${I(icon, "size-4")}</button>`;
+    const cell = (d) => {
+      const out = d.getMonth() !== month.getMonth(), on = sameDay(d, value), now = sameDay(d, today);
+      return `<span class="relative size-9 p-0 text-center"><button type="button" data-cal-day="${+d}"${now ? " data-today" : ""} aria-pressed="${on}" aria-label="${esc(dayLabel(d))}, ${d.getFullYear()}"
+        class="${cx("inline-flex size-9 items-center justify-center rounded-md text-sm tabular-nums transition-colors cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600/30",
+          on ? "bg-blue-600 text-white shadow-2xs hover:bg-blue-700" : cx(out ? "text-gray-300" : "text-gray-800", "hover:bg-gray-100", now && "font-semibold text-blue-600 ring-1 ring-inset ring-blue-500/50"))}">${d.getDate()}</button></span>`;
+    };
+    const weeks = Array.from({ length: 6 }, (_, w) => `<div class="flex w-full">${days.slice(w * 7, w * 7 + 7).map(cell).join("")}</div>`).join("");
+    return `<div class="flex flex-col gap-3">
+      <div class="relative flex h-9 items-center justify-center px-1">${nav(-1, "chevron-left", "Previous month")}<span class="text-sm font-semibold text-gray-900">${month.toLocaleString("en-US", { month: "long", year: "numeric" })}</span>${nav(1, "chevron-right", "Next month")}</div>
+      <div><div class="flex">${["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((w) => `<span class="flex size-9 items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-gray-400">${w}</span>`).join("")}</div>${weeks}</div></div>`;
+  },
+  open(anchor, o) {
+    this.close();
+    this.o = { today: new Date(), ...o };
+    const base = this.o.value || this.o.today;
+    this.month = new Date(base.getFullYear(), base.getMonth(), 1);
+    const el = document.createElement("div");
+    el.className = "fixed z-[90] w-auto rounded-lg border border-gray-200 bg-white p-2 shadow-lg";
+    el.setAttribute("role", "dialog"); el.setAttribute("aria-label", o.label || "Choose a date");
+    el.innerHTML = this.monthHTML(); document.body.appendChild(el); this.el = el; icons();
+    const a = anchor.getBoundingClientRect(), h = el.offsetHeight, up = a.bottom + 4 + h > innerHeight && a.top - 4 - h > 0;
+    Object.assign(el.style, { left: `${Math.max(8, Math.min(innerWidth - el.offsetWidth - 8, a.left))}px`, top: `${up ? a.top - 4 - h : a.bottom + 4}px` });
+    el.addEventListener("click", (e) => {
+      const n = e.target.closest("[data-cal-nav]");
+      if (n) { this.month = new Date(this.month.getFullYear(), this.month.getMonth() + Number(n.dataset.calNav), 1); el.innerHTML = this.monthHTML(); icons(); return; }
+      const d = e.target.closest("[data-cal-day]"); if (!d) return;
+      const pick = new Date(Number(d.dataset.calDay)), cb = this.o.onPick; this.close(); if (cb) cb(pick);
+    });
+    this.anchor = anchor;
+    this.away = (e) => { if (this.el && !this.el.contains(e.target) && !anchor.contains(e.target)) this.close(); };
+    this.esc = (e) => { if (e.key === "Escape" && this.el) { e.preventDefault(); this.close(); anchor.focus({ preventScroll: true }); } };
+    setTimeout(() => { document.addEventListener("mousedown", this.away); document.addEventListener("keydown", this.esc); }, 0);
+    const first = el.querySelector('[aria-pressed="true"]') || el.querySelector("[data-today]") || el.querySelector("[data-cal-day]"); if (first) first.focus({ preventScroll: true });
+  },
+  close() {
+    if (!this.el) return;
+    this.el.remove(); this.el = null;
+    document.removeEventListener("mousedown", this.away); document.removeEventListener("keydown", this.esc);
+  }
+};
+
+</script>
+<script>
+/* ---- proto-data.js ---- */
+/* Calendar prototype: the invented events on the calendar. Everything here is made up.
+ * "Today" is Friday, Sept 25, 2026, and the time is 10:40 AM.
+ *
+ * Each event: { id, title, detail, date ("YYYY-MM-DD"), start "9:30", end "10:15" (or dur in minutes),
+ *   color: "blue" | "indigo" | "teal" | "sky" | "gray", faded, cancelled }. Add whatever else your design needs.
+ * Questions for the prototype go in PROTO_DATA.questions (see .claude/skills/asha-prototype). */
+(function () {
+  const today = "2026-09-25";
+  const week = ["2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25"];
+  const events = [
+    ...week.map((date, i) => ({ id: `standup-${i}`, date, start: "9:00", dur: 15, title: "Team standup", detail: "Video call", color: "blue" })),
+    { id: "planning", date: "2026-09-21", start: "10:00", end: "12:00", title: "Quarterly planning", detail: "Big room", color: "indigo" },
+    { id: "lunch-priya", date: "2026-09-21", start: "12:30", end: "13:30", title: "Lunch with Priya", detail: "Corner café", color: "teal" },
+    { id: "design-review", date: "2026-09-22", start: "13:00", end: "14:00", title: "Design review", detail: "Room 2", color: "indigo" },
+    { id: "kids", date: "2026-09-22", start: "16:00", end: "16:45", title: "Pick up the kids", color: "gray" },
+    { id: "vendor", date: "2026-09-23", start: "10:00", end: "10:30", title: "Vendor call", detail: "Cancelled by them", color: "sky", cancelled: true },
+    { id: "focus", date: "2026-09-23", start: "14:00", end: "16:00", title: "Focus time", color: "gray" },
+    { id: "all-hands", date: "2026-09-24", start: "11:00", end: "12:00", title: "All hands", detail: "Main hall and video", color: "blue" },
+    { id: "one-sam", date: "2026-09-25", start: "11:00", end: "11:30", title: "1:1 with Sam", detail: "Sam's desk", color: "sky" },
+    { id: "interview", date: "2026-09-25", start: "11:00", end: "12:00", title: "Interview", detail: "Room 3", color: "blue" },
+    { id: "budget", date: "2026-09-25", start: "13:30", end: "14:30", title: "Budget check-in", detail: "Room 2", color: "indigo" },
+    { id: "wrap-up", date: "2026-09-25", start: "16:00", end: "16:30", title: "Weekly wrap-up", detail: "Video call", color: "teal" },
+    { id: "gym", date: "2026-09-26", start: "8:00", end: "9:00", title: "Gym", color: "gray" }
+  ].map((e) => ({ ...e, faded: e.faded ?? (e.date < today) }));
+  window.PROTO_DATA = { today, now: "10:40", events, questions: [] };
+})();
+
+</script>
+<script>
+/* ---- proto-app.js ---- */
+/* Calendar prototype: the design system's Calendar, full screen, with clickable events.
+ * Clicking an event opens yourPanel() below, which only lists the event's raw data: that's where your design goes.
+ * Everything is pretend: no network, no real people. Rebuild with `python3 build.py` after editing src/. */
+const PROTO = (() => {
+  let cal = null;
+
+  /* YOUR DESIGN GOES HERE. Replace this with the panel you design. Draw with the library's kit (Sheet, psec, button,
+   * statusDot, fieldTable, Grid, actionsMenu ... in docs/design-system/src/kit.js) so it looks like the rest of Asha. */
+  function yourPanel(ev) {
+    const s = calMin(ev.start), e = ev.end != null ? calMin(ev.end) : s + (ev.dur || 30), d = calDate(ev.date);
+    const row = (k, v) => `<tr><td class="w-[140px] py-1 pe-4 text-[13px] text-gray-500 align-top whitespace-nowrap">${k}</td><td class="py-1 text-[13px] text-gray-800">${v}</td></tr>`;
+    Sheet.open({
+      flush: true, title: esc(ev.title), subtitle: `${CAL_DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} · ${calRange(s, e)}`,
+      body: `<section class="${R.psec}"><div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-[13px] text-gray-600">
+          Not designed yet. This is the raw data for the event; replace <code class="text-gray-800">yourPanel()</code> in
+          <code class="text-gray-800">src/proto-app.js</code> with your design.</div></section>
+        ${psec("Event", `<table class="w-full">${Object.entries(ev).map(([k, v]) => row(esc(k), esc(String(v)))).join("")}</table>`)}`,
+      footer: `<span class="grow"></span>${button("Close", { v: "white", s: "sm", attrs: 'data-act="close-sheet"' })}`
+    });
+  }
+
+  function init() {
+    cal = new Calendar(document.getElementById("app"), { date: PROTO_DATA.today, now: PROTO_DATA.now, view: "week", from: 7, to: 20,
+      height: window.innerHeight - 56 - 24 - 54, events: PROTO_DATA.events, onOpen: yourPanel });
+  }
+  return { init, open: yourPanel, get calendar() { return cal; } };
+})();
+
+</script>
+<script>PROTO.init();</script>
+</body>
+</html>

@@ -82,14 +82,13 @@ const R = {
   menuLabel: "px-2 pt-1.5 pb-1 text-xs font-medium text-gray-500",
   menuSep: "my-1 -mx-1 border-t border-gray-200/80",
   popover: "asha-pop bg-white border border-gray-200 rounded-xl shadow-xl",
-  dialog: "asha-pop w-[440px] max-w-full bg-white rounded-xl border border-gray-200 shadow-[0_24px_48px_-12px_rgba(17,24,39,0.25)]",
+  dialog: "asha-pop w-[480px] max-w-full bg-white rounded-xl border border-gray-200 shadow-[0_24px_48px_-12px_rgba(17,24,39,0.25)]",
   tooltip: "inline-flex items-center gap-x-2 py-1 px-2 rounded-md bg-gray-900 text-xs font-medium text-white shadow-md",
-  toast: "flex items-center gap-x-3 w-[360px] max-w-full py-2.5 ps-3 pe-2 rounded-xl bg-gray-900 text-sm text-white shadow-xl",
 
   // Navigation
-  navItem: "flex w-full items-center gap-x-2 h-8 px-2 rounded-lg text-sm text-gray-700 transition-colors duration-100 hover:bg-gray-100 cursor-pointer [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-gray-500",
-  navItemOn: "flex w-full items-center gap-x-2 h-8 px-2 rounded-lg text-sm font-medium text-gray-900 bg-gray-100 cursor-pointer [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-gray-800",
-  navGroup: "px-2 pt-4 pb-1 text-xs font-medium text-gray-500",
+  navItem: "flex w-full items-center gap-x-2 h-7 px-2 rounded-lg text-sm text-gray-700 transition-colors duration-100 hover:bg-gray-100 cursor-pointer [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-gray-500",
+  navItemOn: "flex w-full items-center gap-x-2 h-7 px-2 rounded-lg text-sm font-medium text-gray-900 bg-gray-100 cursor-pointer [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-gray-800",
+  navGroup: "px-2 pt-3 pb-1 text-xs font-medium text-gray-500",
   tabs: "flex items-center gap-x-5 border-b border-gray-200/80",
   tab: "relative -mb-px inline-flex items-center gap-x-1.5 h-10 border-b-2 border-transparent text-sm font-medium text-gray-500 transition-colors duration-150 hover:text-gray-800 cursor-pointer whitespace-nowrap [&_svg]:size-4",
   tabOn: "relative -mb-px inline-flex items-center gap-x-1.5 h-10 border-b-2 border-blue-600 text-sm font-medium text-blue-600 cursor-pointer whitespace-nowrap [&_svg]:size-4",
@@ -99,15 +98,17 @@ const R = {
   segOn: "inline-flex items-center gap-x-1.5 h-full px-3 rounded-md text-sm font-medium bg-white text-gray-800 shadow-2xs cursor-pointer whitespace-nowrap [&_svg]:size-4",
   segItemSm: "inline-flex items-center gap-x-1.5 h-full px-2.5 rounded-md text-[13px] font-medium text-gray-600 hover:text-gray-800 cursor-pointer whitespace-nowrap",
   segOnSm: "inline-flex items-center gap-x-1.5 h-full px-2.5 rounded-md text-[13px] font-medium bg-white text-gray-800 shadow-2xs cursor-pointer whitespace-nowrap",
+  // One 44px top line for every bar: page headers, panel tops, sidebar header
+  bar: "flex h-11 shrink-0 items-center gap-2 px-4 border-b border-gray-200/80 bg-white",
   crumb: "inline-flex items-center gap-x-1.5 text-[13px] text-gray-500 [&_svg]:size-3.5 [&_svg]:text-gray-300",
 
   // Data grid — Attio layout, asha-ui Lists sizes (40px header, 36px rows)
   gridWrap: "g-wrap overflow-auto border-y border-gray-200/80",
   gridHead: "h-10 px-3 border-b border-e border-gray-200/80 text-start text-sm font-medium text-gray-500 whitespace-nowrap select-none",
   gridCell: "g-cell h-9 px-3 border-b border-e border-gray-200/80 text-sm text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis",
-  gridFoot: "h-8 px-3 border-e border-gray-200/80 text-xs text-gray-400 whitespace-nowrap",
-  // Attio-style condition chip, as on the Claims toolbar (AshaConditionChip): field · operator · value | ×
-  chip: "inline-flex h-7 max-w-full shrink-0 items-stretch overflow-hidden rounded-md border border-gray-200 bg-white text-xs shadow-2xs hover:border-gray-300 whitespace-nowrap",
+  gridFoot: "h-9 px-3 border-e border-gray-200/80 text-[13px] text-gray-400 whitespace-nowrap",
+  // Attio-style condition chip: field · operator · value | ×
+  chip: "inline-flex h-8 max-w-full shrink-0 items-stretch overflow-hidden rounded-md border border-gray-200 bg-white text-xs shadow-2xs hover:border-gray-300 whitespace-nowrap",
   chipBody: "inline-flex min-w-0 items-center gap-1 px-2 hover:bg-gray-50 cursor-pointer [&_svg]:size-3 [&_svg]:text-blue-700",
   chipField: "shrink-0 font-medium text-gray-800",
   chipOp: "shrink-0 text-gray-500",
@@ -130,38 +131,6 @@ const R = {
 /* ============================================================ helpers */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-/* Library v2 (?v=2): the improvements from the UX review. A block checks V2 to draw its improved version and marks each
- * changed element with chg("why"), an attribute string (empty in v1). "Highlight changes" outlines and numbers every
- * marked element and lists the reasons under the block. sysChange("why") records a change made once for every block. */
-/* v4 (?v=4) builds on v2: one header for every record (its page and its panels), one Actions menu, and tables you type
- * into. It's a let, and V4_OPTS holds the open choices, so a review page can draw the same block both ways. */
-// v4 is the default (since 2026-10-01); ?v=1 and ?v=2 show the earlier versions for comparison
-const DS_VERSION = new URLSearchParams(location.search).get("v") || "4";
-let V4 = DS_VERSION === "4";
-const V4_OPTS = { header: "one", status: "table", menu: "compact", open: false };
-// v4 marks the page so CSS can apply v4-wide rules (every table in a panel is compact, like the data grid)
-if (V4) document.documentElement.classList.add("v4");
-const V2 = ["2", "4"].includes(DS_VERSION);
-const chg = (note) => (V2 && !V4 ? ` data-chg="${esc(note)}"` : "");
-/* chg4("why") marks a v4 change; in v4 the highlight shows v4's changes (on top of v2), not v2's */
-const chg4 = (note) => (V4 ? ` data-chg="${esc(note)}"` : "");
-const SYSTEM_CHANGES = [];
-const sysChange = (area, note) => { if (V2 && !V4) SYSTEM_CHANGES.push([area, note]); return V2; };
-const sysChange4 = (area, note) => { if (V4) SYSTEM_CHANGES.push([area, note]); return V4; };
-if (V2) {
-  Object.assign(R, {
-    navItem: R.navItem.replace("h-8", "h-7"), navItemOn: R.navItemOn.replace("h-8", "h-7"), navGroup: R.navGroup.replace("pt-4", "pt-3"),
-    chip: R.chip.replace("h-7", "h-8"),
-    dialog: R.dialog.replace("w-[440px]", "w-[480px]"),
-    gridFoot: R.gridFoot.replace("h-8", "h-9").replace("text-xs", "text-[13px]"),
-    // one 44px top line for every bar: page headers, panel tops, sidebar header
-    bar: "flex h-11 shrink-0 items-center gap-2 px-4 border-b border-gray-200/80 bg-white"
-  });
-  sysChange("Navigation", "Sidebar rows are 28px instead of 32px, with less space above group labels, so a biller sees Claims and EOBs without scrolling (Attio's nav density).");
-  sysChange("Toolbars", "Every toolbar control is 32px: filter chips, Filter, Discard and Save view used to be 28px next to 32px search and buttons.");
-  sysChange("Dialogs", "One dialog width, 480px. Dialogs used to be 440, 500 and 560px.");
-  sysChange("Grid footer", "The totals row is 36px with 13px text, like the rows above it (was 32px, 12px).");
-}
 const I = (name, cls = "") => `<i data-lucide="${name}" class="${cls}" aria-hidden="true"></i>`;
 const cx = (...a) => a.filter(Boolean).join(" ");
 const icons = () => window.lucide && lucide.createIcons({ attrs: { "stroke-width": 1.75 } });
@@ -195,15 +164,11 @@ const alertMark = (short, detail, { action = "", align = "end" } = {}) => `<span
   <button type="button" class="inline-flex items-center gap-1 h-6 px-1.5 -mx-1.5 rounded-md text-[13px] text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-blue-600/20 cursor-pointer whitespace-nowrap" aria-describedby="">${I("circle-alert", "size-3.5 shrink-0 text-orange-500")}${short}</button>
   <span role="tooltip" class="pointer-events-none invisible opacity-0 group-hover/alert:visible group-hover/alert:opacity-100 group-hover/alert:pointer-events-auto group-focus-within/alert:visible group-focus-within/alert:opacity-100 group-focus-within/alert:pointer-events-auto transition-opacity duration-150 absolute top-full ${align === "start" ? "start-0" : "end-0"} z-30 mt-1.5 w-72 ${R.popover} p-3 text-[13px] leading-5 text-gray-700 whitespace-normal">${detail}${action ? `<span class="mt-2 flex justify-end">${action}</span>` : ""}</span></span>`;
 
-/* Avatars: people get soft Preline tints with initials; organisations get a small square mark */
-const AV_SOFT = ["bg-blue-100 text-blue-800", "bg-indigo-100 text-indigo-800", "bg-teal-100 text-teal-800", "bg-sky-100 text-sky-800", "bg-violet-100 text-violet-800", "bg-gray-100 text-gray-700"];
-const AV_SOLID = ["bg-indigo-500", "bg-teal-500", "bg-pink-500", "bg-sky-500", "bg-violet-500", "bg-blue-500"];
-const hash = (s) => [...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+/* Avatars: people get grey initials; organisations get a small outlined square mark */
 const initials = (n) => String(n || "").split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 function avatar(name, { size = 6, square = false, solid = false } = {}) {
   const sz = { 5: "size-5 text-[10px]", 6: "size-6 text-[10px]", 7: "size-7 text-[11px]", 8: "size-8 text-xs", 9: "size-9 text-xs", 10: "size-10 text-sm", 12: "size-12 text-base" }[size];
-  const tone = V2 ? (solid || square ? "bg-white ring-1 ring-inset ring-gray-200 text-gray-600" : "bg-gray-100 text-gray-600")
-    : solid ? `${AV_SOLID[hash(name) % AV_SOLID.length]} text-white` : AV_SOFT[hash(name) % AV_SOFT.length];
+  const tone = solid || square ? "bg-white ring-1 ring-inset ring-gray-200 text-gray-600" : "bg-gray-100 text-gray-600";
   return `<span class="flex shrink-0 justify-center items-center ${sz} ${square ? "rounded-md" : "rounded-full"} ${tone} font-semibold" aria-hidden="true">${esc(initials(name) || "?")}</span>`;
 }
 
@@ -226,13 +191,11 @@ const kv = (icon, key, value) => `<div class="${R.kvRow}"><span class="${R.kvKey
 const section = (title, body, { actions = "", count, cls = "" } = {}) => `<section class="${cls}">
   <div class="flex items-center justify-between gap-3 mb-2"><h3 class="${R.groupTitle} flex items-center gap-x-2">${title}${count != null ? ` <span class="${R.count}">${count}</span>` : ""}</h3>${actions}</div>${body}</section>`;
 const metric = (label, value, { delta, sub, goal } = {}) => {
-  const bar = goal != null ? `<div class="${V2 ? "mt-1.5 h-1" : "mt-2 h-1.5"} rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-600" style="width:${Math.min(100, goal)}%"></div></div>` : "";
+  const bar = goal != null ? `<div class="mt-1.5 h-1 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-600" style="width:${Math.min(100, goal)}%"></div></div>` : "";
   return `<div class="min-w-0">
   <p class="text-[13px] text-gray-500 truncate">${label}</p>
   <p class="mt-1 flex items-center gap-x-2"><span class="${R.number}">${value}</span>${delta ? `<span class="${R.delta}">${delta}</span>` : ""}</p>
-  ${V2 ? "" : bar}
-  ${sub ? `<p class="mt-1 text-xs text-gray-500">${sub}</p>` : ""}${V2 ? bar : ""}</div>`; };
-if (V2) sysChange("Metric strips", "A goal bar sits under the caption instead of between the number and the caption, so every caption in a strip lines up.");
+  ${sub ? `<p class="mt-1 text-xs text-gray-500">${sub}</p>` : ""}${bar}</div>`; };
 const metricStrip = (items, cls = "", { gutter = 0 } = {}) => `<div class="grid border-y border-gray-200/80 divide-x divide-gray-200/80 ${gutter ? `-mx-[${gutter}px]` : ""} ${cls}" style="grid-template-columns:repeat(${items.length},minmax(0,1fr))">${items.map((m) => `<div class="py-4 px-5 ${gutter ? `first:ps-[${gutter}px] last:pe-[${gutter}px]` : "first:ps-0"}">${metric(...m)}</div>`).join("")}</div>`;
 const skel = (w = "w-full", h = "h-3.5") => `<span class="block ${w} ${h} ${R.skel}"></span>`;
 const emptyState = ({ icon = "inbox", title, body, action = "" }) => `<div class="flex flex-col items-center justify-center gap-1 py-14 px-6 text-center">
@@ -286,7 +249,7 @@ const Motion = {
     setTimeout(() => { g.remove(); to.classList.remove("asha-gliding"); }, 240);
   }
 };
-/* v4: toasts are the light, frosted, Mac-style card Asha's notifications use (Team Chat alerts, PR #7685): top-right
+/* Toasts are the light, frosted, Mac-style card Asha's notifications use (Team Chat alerts, PR #7685): top-right
  * corner, newest first, a soft shadow and blur instead of a dark slab, the close button a small frosted circle on the
  * card's top-left corner that shows on hover, actions as quiet text buttons. */
 R.alertCard = "group/alert relative flex items-center gap-x-3 w-[356px] max-w-full p-3 rounded-2xl bg-white/70 text-[13px] text-gray-900 shadow-[0_0_0_0.5px_rgb(0_0_0/0.1),0_10px_28px_-8px_rgb(16_24_40/0.22),0_2px_6px_rgb(16_24_40/0.08)] backdrop-blur-xl backdrop-saturate-150";
@@ -294,25 +257,21 @@ R.alertClose = "absolute -top-1.5 -start-1.5 inline-flex size-5 items-center jus
 R.alertAction = "inline-flex h-7 shrink-0 items-center rounded-lg px-2.5 text-[13px] font-medium text-gray-900 hover:bg-black/5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600 cursor-pointer";
 /* One alert card: icon (or a person's avatar for a message), a bold title line and an optional grey line, an action */
 const alertCard = ({ icon = "circle-check", tone = "blue", lead = "", title, body = "", time = "", action = "", attrs = "" }) => `<div class="${R.alertCard}" role="status" ${attrs}><button type="button" class="${R.alertClose}" aria-label="Dismiss">${I("x", "size-3")}</button>${lead || I(icon, `size-4 shrink-0 ${{ blue: "text-blue-600", orange: "text-orange-500", red: "text-red-600", gray: "text-gray-400" }[tone]}`)}<div class="min-w-0 grow"><div class="flex items-baseline gap-2"><p class="min-w-0 grow truncate font-medium">${title}</p>${time ? `<span class="shrink-0 text-xs text-gray-500">${time}</span>` : ""}</div>${body ? `<p class="text-gray-600 line-clamp-2">${body}</p>` : ""}</div>${action ? `<button type="button" class="${R.alertAction}" data-toast-action>${action}</button>` : ""}</div>`;
-if (V4) sysChange4("Toasts and notifications", "Toasts are the light, frosted, Mac-style card Asha's notifications already use: top-right corner, a soft shadow instead of a dark slab, the close button a small circle on the card's corner on hover, and quiet text actions like Undo.");
-/* A short confirmation at the bottom of the screen; one optional action such as Undo */
+/* A short confirmation in the top-right corner; one optional action such as Undo */
 function toast(msg, { action, onAction, icon = "check", ms = 4000 } = {}) {
   let host = document.getElementById("asha-toasts");
-  if (!host) { host = document.createElement("div"); host.id = "asha-toasts"; host.className = V2 ? "fixed top-3 end-3 z-[60] flex flex-col items-end gap-2 pointer-events-none" : "fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 pointer-events-none"; host.setAttribute("aria-live", "polite"); document.body.appendChild(host); }
+  if (!host) { host = document.createElement("div"); host.id = "asha-toasts"; host.className = "fixed top-3 end-3 z-[60] flex flex-col items-end gap-2 pointer-events-none"; host.setAttribute("aria-live", "polite"); document.body.appendChild(host); }
   const t = document.createElement("div");
-  if (V4) { t.className = "pointer-events-auto asha-toast-in"; t.innerHTML = alertCard({ icon: icon === "check" ? "circle-check" : icon, tone: /trash|x/.test(icon) ? "gray" : "blue", title: msg, action }); t.querySelector("[aria-label=Dismiss]").addEventListener("click", () => kill()); }
-  else { t.className = `${R.toast} pointer-events-auto asha-toast-in`; t.setAttribute("role", "status");
-    t.innerHTML = `${I(icon, "size-4 shrink-0 text-blue-300")}<span class="grow">${msg}</span>${action ? button(action, { v: "onDark", s: "xs", attrs: "data-toast-action" }) : ""}`; }
+  t.className = "pointer-events-auto asha-toast-in"; t.innerHTML = alertCard({ icon: icon === "check" ? "circle-check" : icon, tone: /trash|x/.test(icon) ? "gray" : "blue", title: msg, action }); t.querySelector("[aria-label=Dismiss]").addEventListener("click", () => kill());
   host.appendChild(t); icons();
   let gone = false; const kill = () => { if (gone) return; gone = true; t.classList.remove("asha-toast-in"); t.classList.add("asha-toast-out"); setTimeout(() => t.remove(), Motion.reduced() ? 0 : 160); };
   const act = t.querySelector("[data-toast-action]"); if (act) act.addEventListener("click", () => { if (onAction) onAction(); kill(); });
   setTimeout(kill, ms);
 }
 
-/* Chart axis text: v2 reads at a distance (11px gray-500, about 4.8:1) instead of 10px gray-400 (about 2.6:1) */
-const AXIS_INK = V2 ? "#6A7282" : "#99A1AF", AXIS_PX = V2 ? 11 : 10;
-if (V2) sysChange("Charts", "Axis labels are 11px gray-500 (about 4.8:1 contrast) instead of 10px gray-400 (about 2.6:1), readable on a clinic monitor across the room.");
-/* ============================================================ charts (blue only, per the RI colour rule) */
+/* Chart axis text reads at a distance: 11px gray-500 (about 4.8:1) */
+const AXIS_INK = "#6A7282", AXIS_PX = 11;
+/* ============================================================ charts (blue only, per the colour rules) */
 const Chart = {
   /* Vertical bars. values: numbers; labels: strings; goal: optional line; highlight: index drawn darker */
   bars({ values, labels = [], w = 560, h = 180, goal, fmt = (v) => v, highlight = values.length - 1, tone = "#155DFC", muted = "#BEDBFF" }) {
@@ -366,30 +325,18 @@ const Chart = {
 R.psec = "px-5 py-4 border-t border-gray-200/80";
 const psec = (title, body, { actions = "", count, cls = "" } = {}) => `<section class="${cx(R.psec, cls)}">${title ? `<div class="flex items-center justify-between gap-3 mb-2.5 min-h-6"><h3 class="${R.groupTitle} flex items-center gap-x-2">${title}${count != null ? ` <span class="${R.count}">${count}</span>` : ""}</h3>${actions ? `<div class="flex items-center gap-1.5">${actions}</div>` : ""}</div>` : ""}${body}</section>`;
 const bleed = (html) => `<div class="-mx-5">${html}</div>`;
-if (V2) sysChange("Toasts", "Toasts start at the window's top-right corner (owner rule) and only report something you can undo or something still running out of view; saving a view and routine bulk actions no longer toast.");
 /* Label-over-value grid for a record's facts (cols per row) */
 const metaGrid = (items, cols = 3) => `<dl class="grid gap-x-6 gap-y-3" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${items.map(([k, v]) => `<div class="min-w-0"><dt class="text-xs text-gray-500">${k}</dt><dd class="mt-0.5 text-sm text-gray-800 truncate">${v}</dd></div>`).join("")}</dl>`;
 /* One line in a list of things to know: icon, text, optional right-hand bit */
 const infoRow = (icon, text, { tone = "gray", right = "" } = {}) => `<div class="flex items-start gap-x-2.5 py-1.5 text-sm text-gray-800">${I(icon, `size-4 mt-0.5 shrink-0 ${tone === "needs" ? "text-orange-500" : tone === "blue" ? "text-blue-600" : "text-gray-400"}`)}<div class="min-w-0 grow">${text}</div>${right ? `<div class="shrink-0 text-[13px] text-gray-500">${right}</div>` : ""}</div>`;
-function sheetInner({ title, subtitle = "", lead = "", tabs, tab = 0, body = "", footer = "", actions = "", flush = false, closeAttrs = "", marks = "", facts = null }) {
-  if (V4 && V4_OPTS.header !== "two") return `${recordHeader({ lead, title, sub: subtitle, marks, actions, end: iconButton("x", "Close", { s: "iconSm", attrs: closeAttrs }), facts: V4_OPTS.header === "facts" ? facts : null, tabs, tab })}
+function sheetInner({ title, subtitle = "", lead = "", tabs, tab = 0, body = "", footer = "", actions = "", flush = false, closeAttrs = "", marks = "" }) {
+  return `${recordHeader({ lead, title, sub: subtitle, marks, actions, end: iconButton("x", "Close", { s: "iconSm", attrs: closeAttrs }), tabs, tab })}
     <div class="grow min-h-0 overflow-y-auto ${flush ? "[&>section:first-child]:border-t-0" : "px-5 py-4"}">${body}</div>
-    ${footer ? `<div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-200/80">${footer}</div>` : ""}`;
-  if (V2) return `<div class="${R.bar} justify-end !px-3"${chg("Panel tops share the page header's 44px line: close and actions sit in a top bar, the record's name under it (Attio's record panel)")}>${actions}${iconButton("x", "Close", { s: "iconSm", attrs: closeAttrs })}</div>
-    <div class="flex items-center gap-x-3 px-5 pt-3 ${tabs ? "pb-1" : "pb-3"}">${lead}<div class="min-w-0 grow"><h2 class="text-base font-semibold text-gray-800 truncate">${title}</h2>${subtitle ? `<div class="text-[13px] text-gray-500 mt-0.5">${subtitle}</div>` : ""}</div></div>
-    ${tabs ? `<div class="px-5 border-b border-gray-200/80">${tabsBar(tabs, tab, "!border-0")}</div>` : `<div class="border-b border-gray-200/80"></div>`}
-    <div class="grow min-h-0 overflow-y-auto ${flush ? "[&>section:first-child]:border-t-0" : "px-5 py-4"}">${body}</div>
-    ${footer ? `<div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-200/80">${footer}</div>` : ""}`;
-  return `<div class="flex items-start gap-x-3 px-5 pt-4 ${tabs ? "pb-1" : "pb-4"}">${lead}
-      <div class="min-w-0 grow"><h2 class="text-base font-semibold text-gray-800 truncate">${title}</h2>${subtitle ? `<div class="text-[13px] text-gray-500 mt-0.5">${subtitle}</div>` : ""}</div>
-      <div class="flex items-center gap-0.5 -me-2">${actions}${iconButton("x", "Close", { s: "iconSm", attrs: closeAttrs })}</div></div>
-    ${tabs ? `<div class="px-5 border-b border-gray-200/80">${tabsBar(tabs, tab, "!border-0")}</div>` : ""}
-    <div class="grow min-h-0 overflow-y-auto ${flush ? (tabs ? "[&>section:first-child]:border-t-0" : "") : "px-5 py-4"}">${body}</div>
     ${footer ? `<div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-200/80">${footer}</div>` : ""}`;
 }
-/* v4: one header for a record, the same on its page and in its panels. Who or what it is and one line of facts on the
+/* one header for a record, the same on its page and in its panels. Who or what it is and one line of facts on the
  * left, marks that need attention next to the name, the record's actions then close (panel) or previous/next (page) on
- * the same row; nothing above it. facts: [[label, value, more]] adds one line of key facts (the chart): one label and one
+ * the same row; nothing above it. facts: [[label, value, more]] adds one line of key facts: one label and one
  * value each, never a third line; "more" shows on hover; tabs sit at its
  * foot. rule: false leaves off the bottom line when the page draws its own tab bar under it. */
 function recordHeader({ lead = "", title, sub = "", marks = "", actions = "", end = "", facts = null, tabs = null, tab = 0, size = "panel", rule = true }) {
@@ -400,21 +347,7 @@ function recordHeader({ lead = "", title, sub = "", marks = "", actions = "", en
     ${facts ? `<div class="flex gap-10 pt-3 ${tabs ? "pb-1" : "pb-3.5"}">${facts.map(([l, v, sb]) => `<div class="min-w-0"><p class="text-xs text-gray-500">${l}</p><p class="mt-0.5 text-sm font-medium text-gray-800 tabular-nums truncate"${sb ? ` data-tip="${esc(String(sb).replace(/<[^>]+>/g, ""))}"` : ""}>${v}</p></div>`).join("")}</div>` : ""}
     ${tabs ? `<div class="${facts ? "" : "pt-2"}">${tabsBar(tabs, tab, "!border-0")}</div>` : ""}</header>`;
 }
-/* v4: the one patient header, the same on the chart and in every panel about a patient (appointment, check-in, ...).
- * Next to the name, two compact marks instead of a "Before the visit" list: medical alerts as one icon with the count
- * (orange when one needs action before treatment, like Premedicate; hover lists them), and the family balance as a
- * wallet with the amount (hover says what it is). sub is the one grey line under the name (age · chart #, or the visit
- * time in a visit's panel). Everything else is recordHeader's: actions, end, facts, tabs, size, rule. */
-const PT_NEEDS_ACTION = /premedicate|antibiotic|blood thinner/i;
-function patientMarks({ alerts = [], familyBalance = 0, newPatient = false } = {}) {
-  const needs = alerts.some((a) => PT_NEEDS_ACTION.test(a)), list = [...alerts].sort((a, b) => PT_NEEDS_ACTION.test(b) - PT_NEEDS_ACTION.test(a));
-  const mark = (icon, text, tip, cls) => `<span data-tip="${esc(tip)}" tabindex="0" class="inline-flex items-center gap-1 h-6 px-1.5 rounded-md text-[13px] tabular-nums hover:bg-gray-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600/30 cursor-default ${cls}">${I(icon, "size-4")}${text}</span>`;
-  return `${newPatient ? tag("New patient", "tagOutline") : ""}${alerts.length ? mark(needs ? "circle-alert" : "heart-pulse", alerts.length, list.join(" · "), needs ? "text-orange-600 [&_svg]:text-orange-500" : "text-gray-600 [&_svg]:text-gray-400") : ""}${familyBalance ? mark("wallet", money(familyBalance), "Family balance due", "text-gray-600 [&_svg]:text-gray-400") : ""}`;
-}
-function patientHeader({ name, sub = "", alerts = [], familyBalance = 0, newPatient = false, size = "panel", ...rest }) {
-  return recordHeader({ lead: avatar(name, { size: size === "page" ? 10 : 9 }), title: name, sub, marks: patientMarks({ alerts, familyBalance, newPatient }), size, ...rest });
-}
-/* v4: progressive disclosure. A surface shows what its most frequent job needs; the rest of a row's details open on hover
+/* progressive disclosure. A surface shows what its most frequent job needs; the rest of a row's details open on hover
  * in a card (Grid option peek: (row) => html) and the full record on click. The card sits just left of the panel the
  * grid is in (so it never covers the panel), or beside the row on a page. One card for the whole page. */
 const Peek = {
@@ -431,9 +364,9 @@ const Peek = {
 };
 /* A peek card's body: a title line, then label/value lines */
 const peekCard = (title, pairs, note = "") => `<p class="font-medium text-gray-800 mb-1.5">${title}</p><dl class="space-y-1">${pairs.filter(([, v]) => v != null && v !== "").map(([k, v]) => `<div class="flex gap-3"><dt class="w-24 shrink-0 text-gray-500">${k}</dt><dd class="min-w-0 text-gray-800">${v}</dd></div>`).join("")}</dl>${note ? `<p class="mt-2 text-gray-500">${note}</p>` : ""}`;
-/* A mark next to a record's name: an icon with a hover label; needs: true for the one thing staff must act on */
+/* A mark next to a record's name: an icon with a hover label; needs: true for the one thing someone must act on */
 const recordMark = (icon, tip, needs = false) => `<span data-tip="${esc(tip)}" tabindex="0" class="inline-flex rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600/30">${I(icon, `size-4 ${needs ? "text-orange-500" : "text-gray-400"}`)}</span>`;
-/* v4: the one Actions menu for a record (the claim panel's, made standard). A white Actions button opens a searchable
+/* the one Actions menu for a record. A white Actions button opens a searchable
  * list grouped by what each action is about; the search has focus, arrow keys and Enter pick, Escape closes.
  * groups: [{ label, items: [{ icon, label, hint, suggest, off, danger }] }]. hint: what it does (under the label when
  * rich, on hover otherwise); suggest: why Asha suggests it right now (a sparkle with a hover); off: why it can't run
@@ -441,7 +374,7 @@ const recordMark = (icon, tip, needs = false) => `<span data-tip="${esc(tip)}" t
  * divider (put destructive actions there, last). up opens above the button, for panel footers.
  * Placement (owner rule): the labelled Actions button (with the sparkle) sits bottom-left in a footer when a record has
  * many actions; a menu at the top right of a header is a ⋯ (dots: true, up: false, align: "end") with the same list. */
-function actionsMenu(groups, { label = "Actions", up = true, align = "start", rich = V4_OPTS.menu === "rich", w = 320, open = false, dots = false } = {}) {
+function actionsMenu(groups, { label = "Actions", up = true, align = "start", rich = false, w = 320, open = false, dots = false } = {}) {
   const item = (it) => `<button type="button" role="menuitem" data-am-item data-label="${esc(`${it.label} ${it.hint || ""}`)}" ${it.off ? `aria-disabled="true" data-tip="${esc(it.off)}"` : it.hint && !rich ? `title="${esc(it.hint)}"` : ""} class="${cx(it.danger ? R.menuDanger : R.menuItem, rich && it.hint && "!h-auto py-1.5 !items-start", it.off && "opacity-50 !cursor-default")}">${I(it.icon || "dot", rich && it.hint ? "mt-0.5 shrink-0" : "shrink-0")}<span class="min-w-0 grow text-start">${rich && it.hint ? `<span class="block">${it.label}</span><span class="block text-xs text-gray-500 truncate">${it.hint}</span>` : `<span class="block truncate">${it.label}</span>`}</span>${it.suggest ? `<span data-tip="${esc(it.suggest)}" class="inline-flex shrink-0">${I("sparkles", "!size-3.5 !text-blue-600")}</span>` : ""}</button>`;
   const list = groups.map((g) => `<div data-am-group role="group"${g.label ? ` aria-label="${esc(g.label)}"` : ""}>${g.label ? `<p class="${R.menuLabel}">${g.label}</p>` : `<div class="${R.menuSep}"></div>`}${g.items.map(item).join("")}</div>`).join("");
   const trigger = dots ? iconButton("ellipsis", label === "Actions" ? "More actions" : label, { s: "iconSm", attrs: `data-am-btn aria-haspopup="menu" aria-expanded="${open}"` })
@@ -451,25 +384,9 @@ function actionsMenu(groups, { label = "Actions", up = true, align = "start", ri
       <div class="relative border-b border-gray-200/80"><span class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">${I("search", "size-4 text-gray-400")}</span><input data-am-search class="w-full h-10 ps-9 pe-3 text-[13px] bg-transparent outline-hidden placeholder:text-gray-400" placeholder="Search actions…" aria-label="Search actions" /></div>
       <div class="max-h-80 overflow-y-auto p-1">${list}<p data-am-empty hidden class="px-2 py-3 text-[13px] text-gray-500">No actions match.</p></div></div></div>`;
 }
-if (V4) {
-  sysChange4("Record header", "Every panel and the patient chart use one header: who it is and one line of facts on the left, the actions and close (or previous/next) on the same row. The bar that held only close and a couple of icons is gone.");
-  sysChange4("Actions menu", "Every ⋯ menu on a record is the same Actions button: a searchable list grouped by what each action is about, one line each, a sparkle on what Asha suggests now, and greyed rows that say why they can't run yet.");
-  sysChange4("Typing into tables", "A record's facts are a small table you type into, and lines staff fix (fees, estimates, providers) are cells on the data grid: click or just type, Enter saves and moves down, Tab moves on, lists search as you type. Saves are silent; a failed save leaves an orange mark with a retry.");
-  sysChange4("Status", "A record's status is the first line of its facts table instead of a row of its own.");
-  sysChange4("No patchy columns", "Every column shows a value on every row. A column that's mostly blank reads as broken, so v2's 'only when unusual' blanks are filled in, and a column that only a few rows use is folded into another column or dropped.");
-  sysChange4("Header facts", "Facts in a header are one label and one value each; the extra grey third line moved to the value's hover.");
-  sysChange4("Claims read like paper", "A claim's Claim tab is only what was submitted, editable, in the ADA form's order with its box numbers; rare boxes sit behind More claim details. The EOB tab holds the adjudication, laid out like a dental EOB.");
-  sysChange4("One send dialog", "Texts and emails go through one send dialog, never a message box that opens inside a list.");
-  sysChange4("Steppers", "Step bars never show an alert icon; a problem shows inside its own step.");
-  sysChange4("Clinical notes", "Notes keep the chart's condensed visit panel and nothing sits inside the note text: no toolbar strip and no Accept or Dismiss chips. Scribe's version is a separate AI note you sign.");
-  sysChange4("Compact tables in panels", "Every table in a panel or flyout is the compact data grid size (28px rows, 13px text), editable or not, so a panel never mixes table sizes.");
-  sysChange4("The first-day test", "Anything staff set up (agents, settings, setup steps) has to pass one test: could someone new to dentistry and new to software do it alone? Every answer comes filled in with what most offices pick (marked Recommended), every question is asked the way you'd say it out loud with a one-line reason, rare and technical settings sit behind More settings, and the last step says in plain sentences what will happen.");
-  sysChange4("Most important first", "Each surface shows what its most frequent job needs, as a data grid with the few columns that matter; the rest of a row's details open on hover in a card beside the panel, and the whole record on click, instead of every value strung along one line.");
-  sysChange4("One patient header", "The chart and every panel about a patient share one header: medical alerts as one icon with the count (orange when someone must act first) and the family balance as a wallet with the amount, instead of a 'Before the visit' list.");
-}
-/* Today's ⋯ menu, for comparing against: an icon button and a short plain list */
+/* A plain ⋯ menu: an icon button and a short list */
 const dotsMenu = (items, { label = "More actions", open = false } = {}) => `<div class="relative">${iconButton("ellipsis", label, { v: "white", s: "iconSm" })}${open ? `<div class="${R.menu} !w-52 absolute bottom-full mb-1.5 start-0 z-40" role="menu">${items.map(([ic, l, danger]) => `<button type="button" role="menuitem" class="${danger ? R.menuDanger : R.menuItem}">${I(ic)}${l}</button>`).join("")}</div>` : ""}</div>`;
-/* v4: tables you type into, placed by a block's html() and brought to life by mountSheets(el) in its mount().
+/* tables you type into, placed by a block's html() and brought to life by mountSheets(el) in its mount().
  * fieldTable(rows): a record's fields, [{ label, value, type: "text" | "select" | "none", options, html(row) }];
  * sheetTable(options): any Grid with sheet editing (preset "panel" unless given). */
 const SHEETS = new Map(); let SHEET_SEQ = 0;
@@ -523,13 +440,12 @@ const Sheet = {
 /* ============================================================ Grid (Attio), reusable
  * columns: [{ key, label, icon, w, num, edit, kind: 'text'|'num'|'money'|'date'|'list', render(row), value(row), open }]
  * preset: "page" | "section" | "panel" | "form" (see GRID_PRESETS above); any option below overrides it.
- * v2 options: viewButton: false drops the "Title · count" button when count tabs already name the view; noun names
- * the footer count ("entries", "claims"); a column's normal: [values] leaves those cells blank (status only when unusual;
- * v2 only: v4 fills every row, because a mostly blank column reads as broken).
+ * viewButton: false drops the "Title · count" button when count tabs already name the view; noun names
+ * the footer count ("entries", "orders").
  * gutter: the side padding of the page the grid sits in (default 16). The grid runs edge to edge through it; pass
  * 0 when the grid already touches both edges. box: true draws a full rounded border instead, for a grid that sits
  * among other content in a section (a settings list, a specimen).
- * For small tables in panels and dialogs: density "dense" (13px text, rows stay 36px) or "compact" (the ADA claim form's
+ * For small tables in panels and dialogs: density "dense" (13px text, rows stay 36px) or "compact" (the
  * AshaSpreadsheetTable density="compact": 28px rows, 8px cell padding, small uppercase headers on a light grey band,
  * the same grey under a totals row), lines: false (row lines only),
  * sortable: false, wrap (long text wraps instead of truncating), foot (a fixed totals row, one HTML string per
@@ -554,8 +470,8 @@ const CALC_LABEL = { sum: "Sum", avg: "Average", min: "Min", max: "Max", filled:
  *   page     the main list of a page: edge to edge, 36px rows, cell lines, toolbar, sorting, select, totals
  *   section  a table among other content on a page: a card, 13px text, 36px rows, row lines only
  *   panel    a table in a flyout, dialog or popover: a card, compact (28px rows, small uppercase headers), row lines
- *   form     an ADA-style money sheet (claim lines, EOB, payment posting): compact with cell lines, like the claim form
- * BLOCKS-GUIDE.md "Data grid presentations" has the rules. */
+ *   form     a money sheet (invoice lines, payments): compact with cell lines
+ */
 const GRID_PRESETS = {
   page: {},
   section: { box: true, density: "dense", lines: false, toolbar: false, selectable: false, addColumn: false, footer: false },
@@ -633,8 +549,8 @@ class Grid {
   /* Cell classes for the density and row-lines-only settings; part is "th" or "td" */
   fit(part = "td") { const d = this.o.density;
     return cx(d === "dense" && (part === "th" ? "!h-9 !text-[13px]" : "!text-[13px]"),
-      d === "compact" && (part === "th" ? "!h-7 !px-2 !text-xs !font-semibold uppercase tracking-wide !bg-gray-50" : part === "foot" ? cx("!h-7 !px-2 !text-[13px] leading-none", V4 ? "!bg-white" : "!bg-gray-50")
-        : cx("!h-7 !px-2 !text-[13px] leading-none", V2 && "[&_button]:!h-6 [&_input]:!h-6 [&_select]:!h-6")), !this.o.lines && "!border-e-0"); }
+      d === "compact" && (part === "th" ? "!h-7 !px-2 !text-xs !font-semibold uppercase tracking-wide !bg-gray-50" : part === "foot" ? "!h-7 !px-2 !text-[13px] leading-none !bg-white"
+        : "!h-7 !px-2 !text-[13px] leading-none [&_button]:!h-6 [&_input]:!h-6 [&_select]:!h-6"), !this.o.lines && "!border-e-0"); }
   /* Only a chip that wasn't on screen last render animates in */
   chipClass(key) { this._chipsNow = this._chipsNow || new Set(); this._chipsNow.add(key); return this._chipsSeen && !this._chipsSeen.has(key) ? "asha-chip-in" : ""; }
   /* A column is never narrower than its header: padding + icon + label + sort arrow (+ checkbox on the first) */
@@ -664,8 +580,6 @@ class Grid {
     if (this.o.sheet) { const s = this.sheetCell(r, c); if (s != null) return s; }
     if (this.editing && this.editing.id === r[this.o.rowKey] && this.editing.key === c.key)
       return `<input data-role="edit" class="w-full h-full bg-transparent outline-hidden text-sm text-gray-800 ${c.num ? "text-end tabular-nums" : ""}" value="${esc(r[c.key])}" aria-label="${esc(c.label)}" />`;
-    // v2: a value listed as the column's normal one ("Active", "Signed", "$0.00") leaves the cell blank; it still sorts and filters
-    if (V2 && !V4 && c.normal && ci > 0 && c.normal.includes(this.val(r, c))) return ""; // v4: no patchy columns, every row shows its value
     let inner = c.render ? c.render(r) : esc(r[c.key] ?? "");
     if (c.open) inner = `<button type="button" data-act="open" data-opens-sheet data-id="${r[this.o.rowKey]}" class="min-w-0 truncate font-medium text-gray-800 hover:underline decoration-gray-300 underline-offset-4 cursor-pointer text-start">${inner}</button>`;
     if (ci === 0 && this.o.selectable) inner = `<div class="flex items-center gap-x-2.5 min-w-0">${checkbox(this.sel.has(r[this.o.rowKey]), "Select row", `data-act="sel" data-id="${r[this.o.rowKey]}"`)}${c.lead ? c.lead(r) : ""}${inner}</div>`;
@@ -766,19 +680,19 @@ class Grid {
     const chips = [];
     for (const f of this.o.filters) { const v = this.filters[f.key]; if (v == null) continue; const opt = f.options.find((o) => o.value === v);
       chips.push(`${condChip(f.label, "is", `${esc(opt ? opt.label : v)}`, `data-act="clear-filter" data-key="${f.key}"`, `Remove ${esc(f.label)} filter`, this.chipClass(`f:${f.key}=${v}`))}`); }
-    const defaultSort = V2 && JSON.stringify(this.sort) === JSON.stringify(this.baseline.sort);
+    const defaultSort = JSON.stringify(this.sort) === JSON.stringify(this.baseline.sort);
     if (this.sort && !defaultSort) { const col = this.cols.find((c) => c.key === this.sort.key);
       chips.push(`${condChip("Sorted by", "", `${col.label} ${I(this.sort.dir > 0 ? "arrow-up" : "arrow-down", "size-3.5")}`, `data-act="clear-sort"`, `Remove sort`, this.chipClass(`s:${this.sort.key}`))}`); }
     const menu = this.menu ? `<div class="absolute start-0 top-full mt-1 z-30 ${R.menu}" role="menu">${this.o.filters.map((f) => `<p class="${R.menuLabel}">${f.label} is…</p>${f.options.map((o) => `<button type="button" role="menuitem" class="${R.menuItem}" data-act="pick-filter" data-key="${f.key}" data-v="${esc(o.value)}">${o.tone ? `<span class="${cx(R.dot, TONE_DOT[o.tone])}"></span>` : ""}${esc(o.label)}${this.filters[f.key] === o.value ? I("check", "ms-auto !text-blue-600") : ""}</button>`).join("")}`).join(`<div class="${R.menuSep}"></div>`)}</div>` : "";
     const p = this.o.primary;
     return `<div class="flex items-center gap-2 py-2.5 flex-nowrap min-w-0">
-      ${V2 && !this.o.viewButton ? "" : `<button type="button" class="${cx(R.btn, R.sm, R.ghost, "-ms-2 shrink-0")}">${esc(this.o.title)} <span class="${R.count}">${this.data.length}</span>${I("chevron-down", "!text-gray-400")}</button>
+      ${!this.o.viewButton ? "" : `<button type="button" class="${cx(R.btn, R.sm, R.ghost, "-ms-2 shrink-0")}">${esc(this.o.title)} <span class="${R.count}">${this.data.length}</span>${I("chevron-down", "!text-gray-400")}</button>
       <span class="h-5 shrink-0 border-s border-gray-200/80"></span>`}
       ${searchBox(this.o.searchPlaceholder, { w: this.o.searchWidth || "w-48", value: this.q, attrs: 'data-role="search"' })}
       ${chips.length ? `<div class="flex min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none]">${chips.join("")}</div>` : ""}
-      ${this.o.filters.length ? `<div class="relative shrink-0" data-menu="${this.instance}">${button("Filter", { v: "quiet", s: V2 ? "sm" : "xs", icon: "list-filter", attrs: `data-act="filter" aria-haspopup="menu" aria-expanded="${this.menu}"` })}${menu}</div>` : ""}
+      ${this.o.filters.length ? `<div class="relative shrink-0" data-menu="${this.instance}">${button("Filter", { v: "quiet", s: "sm", icon: "list-filter", attrs: `data-act="filter" aria-haspopup="menu" aria-expanded="${this.menu}"` })}${menu}</div>` : ""}
       <div class="ms-auto flex shrink-0 items-center gap-1.5">
-        ${this.dirty() ? button("Discard", { v: "quiet", s: V2 ? "sm" : "xs", attrs: 'data-act="discard"' }) + button("Save view", { v: "soft", s: V2 ? "sm" : "xs", attrs: 'data-act="save"' }) + '<span class="h-5 mx-1 border-s border-gray-200/80"></span>' : ""}
+        ${this.dirty() ? button("Discard", { v: "quiet", s: "sm", attrs: 'data-act="discard"' }) + button("Save view", { v: "soft", s: "sm", attrs: 'data-act="save"' }) + '<span class="h-5 mx-1 border-s border-gray-200/80"></span>' : ""}
         ${this.o.toolbarExtra || ""}
         ${iconButton("ellipsis", "More, including columns", { s: "iconSm" })}
         ${p ? button(p.label, { v: "solid", s: "sm", icon: p.icon || "plus", attrs: 'data-act="new"' }) : ""}
@@ -811,12 +725,12 @@ class Grid {
       ? `<td class="${cx(R.gridFoot, "g-sticky")}"><span class="font-medium text-gray-700 tabular-nums">${rows.length}</span> <span class="text-gray-400">${esc(this.o.noun)}</span></td>`
       : `<td class="${cx(R.gridFoot, c.num && "text-end")}"><button type="button" data-act="calc" data-key="${c.key}" class="w-full cursor-pointer ${c.num ? "text-end" : "text-start"} hover:text-gray-600">${this.calcValue(c, rows) || `<span class="g-addcalc">+ Add calculation</span>`}</button></td>`).join("")}${this.o.addColumn ? "<td></td>" : ""}</tr>`;
     const e = this.o.empty || {};
-    const empty = !rows.length ? `<div class="${cx("border-b border-gray-200/80", V2 && (this.o.box ? "border-x rounded-b-lg" : edgeToEdge(this.o.gutter)))}">${this.data.length
+    const empty = !rows.length ? `<div class="${cx("border-b border-gray-200/80", this.o.box ? "border-x rounded-b-lg" : edgeToEdge(this.o.gutter))}">${this.data.length
       ? emptyState({ icon: "search-x", title: "Nothing matches", body: "Try a different search or remove a filter.", action: button("Clear filters", { v: "white", s: "sm", attrs: 'data-act="clear-all"' }) })
       : emptyState({ icon: e.icon || "inbox", title: e.title || "Nothing here yet", body: e.body || "", action: e.action ? button(e.action, { v: "white", s: "sm", icon: "plus", attrs: 'data-act="new"' }) : "" })}</div>` : "";
     const n = this.sel.size, bulk = this.o.bulk || [{ label: "Export", icon: "download" }];
     const markup = `${this.o.toolbar ? this.toolbar() : ""}
-      <div class="${cx(R.gridWrap, this.o.sheet && "g-sheet", this.o.box ? cx("!border rounded-lg [&_tr>*:last-child]:!border-e-0", V2 && "bg-white") : edgeToEdge(this.o.gutter), this.o.box && (!(this.o.foot || this.o.footer) || this.o.foot) && "[&_tbody_tr:last-child>td]:!border-b-0")}" style="max-height:${this.o.maxHeight}px" tabindex="0" data-role="grid" role="grid" aria-label="${esc(this.o.title)}" aria-rowcount="${rows.length}">
+      <div class="${cx(R.gridWrap, this.o.sheet && "g-sheet", this.o.box ? "!border rounded-lg [&_tr>*:last-child]:!border-e-0 bg-white" : edgeToEdge(this.o.gutter), this.o.box && (!(this.o.foot || this.o.footer) || this.o.foot) && "[&_tbody_tr:last-child>td]:!border-b-0")}" style="max-height:${this.o.maxHeight}px" tabindex="0" data-role="grid" role="grid" aria-label="${esc(this.o.title)}" aria-rowcount="${rows.length}">
         <table class="g-table table-fixed w-full" style="min-width:${minW}px">
           <colgroup>${widths.map((w, i) => (this.cols[i].grow ? "<col>" : `<col style="width:${w}px">`)).join("")}${this.o.addColumn ? "<col>" : ""}</colgroup>
           ${this.o.head ? `<thead><tr>${head}</tr></thead>` : ""}<tbody>${body}</tbody>${rows.length && (this.o.foot || this.o.footer) ? `<tfoot>${foot}</tfoot>` : ""}
@@ -878,15 +792,14 @@ class Grid {
       if (act === "clear-sort") { this.sort = null; return this.render(); }
       if (act === "clear-all") { this.filters = {}; this.q = ""; return this.render(); }
       if (act === "discard") { this.sort = this.baseline.sort && { ...this.baseline.sort }; this.filters = { ...this.baseline.filters }; return this.render(); }
-      if (act === "save") { this.baseline = { sort: this.sort && { ...this.sort }, filters: { ...this.filters } }; this.render(); if (V2) return; return toast(`Saved to “${esc(this.o.title)}”`); }
+      if (act === "save") { this.baseline = { sort: this.sort && { ...this.sort }, filters: { ...this.filters } }; return this.render(); }
       if (act === "bulk-clear") { this.sel.clear(); return this.render(); }
       if (act === "bulk") { const b = (this.o.bulk || [])[+t.dataset.i]; const picked = this.data.filter((r) => this.sel.has(r[K])), n = picked.length, snapshot = this.data.slice();
         if (b && b.run) { b.run(picked, this); this.glowRows = new Set(picked.map((r) => r[K])); }
         this.sel.clear(); this.render();
         const what = `${n} ${n === 1 ? "row" : "rows"}`;
         if (b && b.danger) return toast(`Deleted ${what}`, { icon: "trash-2", action: "Undo", onAction: () => { this.data = snapshot; this.fresh = new Set(picked.map((r) => r[K])); this.render(); } });
-        if (V2) return; // routine bulk actions: the row glow is the feedback
-        return toast(b && b.run ? `${b.label}: ${what} done` : `${b ? b.label : "Done"} · ${what}`); }
+        return; } // routine bulk actions: the row glow is the feedback
       if (act === "new" && this.o.onNew) return this.o.onNew(this);
       return;
     }
@@ -923,15 +836,112 @@ class Grid {
 document.addEventListener("mousedown", (e) => { const g = Grid.openList; if (g && g.editing && !e.composedPath().includes(g.root)) g.leaveList(false); });
 document.addEventListener("scroll", () => { if (Grid.openList) Grid.openList.placePick(); }, true);
 
-/* ============================================================ block registry */
-const BLOCKS = [];
-const CATEGORIES = [];
-/* defineCategory({ id, title, icon, blurb }) */
-const defineCategory = (c) => { if (!CATEGORIES.find((x) => x.id === c.id)) CATEGORIES.push(c); };
-/* defineBlock({ cat, id, title, note, where, states: ['Normal','Empty',...], canvas: 'gray'|'white'|'bare', pad: true, html(state) => string, mount(el, state) }) */
-const defineBlock = (b) => BLOCKS.push(Object.assign({ canvas: "gray", pad: true }, b));
+/* ============================================================ calendar
+ * A plain time grid like Google Calendar's day and week views: hours down the side, one column per day (or per person
+ * or room), events as tinted blocks you can click. It knows nothing about what an event is; the page that uses it does.
+ *   new Calendar(el, { date: "2026-09-25", view: "week" | "day", events, columns, from: 7, to: 19, now: "10:40",
+ *     weekdays: false, height: 640, toolbar: true, toolbarExtra: "", onOpen(event, el), onSlot({ date, col, time }) })
+ * date is today (Today returns to it; now draws the blue line on it). weekdays: true shows Monday to Friday.
+ * events: [{ id, title, detail, date ("YYYY-MM-DD"; leave it out to mean `date`), col (with columns), start "9:30",
+ *   end "10:15" or dur (minutes), color: "blue" | "indigo" | "teal" | "sky" | "gray", faded, cancelled }]
+ * columns: [{ id, label, sub }] splits one day by person or room; the Day/Week switch is hidden then.
+ * Overlapping events sit side by side. cal.setEvents(list) redraws; cal.go(date, view) moves. */
+const CAL_TONE = {
+  blue: "bg-blue-50 border-blue-500 text-blue-900 hover:bg-blue-100",
+  indigo: "bg-indigo-50 border-indigo-500 text-indigo-900 hover:bg-indigo-100",
+  teal: "bg-teal-50 border-teal-500 text-teal-900 hover:bg-teal-100",
+  sky: "bg-sky-50 border-sky-500 text-sky-900 hover:bg-sky-100",
+  gray: "bg-gray-100 border-gray-400 text-gray-700 hover:bg-gray-200"
+};
+const CAL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const CAL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const calIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const calDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
+const calAdd = (iso, n) => { const d = calDate(iso); d.setDate(d.getDate() + n); return calIso(d); };
+const calMin = (t) => (typeof t === "number" ? t : (([h, m]) => h * 60 + (m || 0))(String(t).split(":").map(Number)));
+/* "9am", "10:30am", "12pm" */
+const calClock = (m) => { const h = Math.floor(m / 60) % 24, mm = m % 60; return `${((h + 11) % 12) + 1}${mm ? `:${String(mm).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+const calRange = (s, e) => { const a = calClock(s), b = calClock(e); return (a.slice(-2) === b.slice(-2) ? a.slice(0, -2) : a) + "–" + b; };
+class Calendar {
+  constructor(el, o = {}) {
+    this.el = el; this.o = Object.assign({ view: "week", from: 7, to: 19, height: 640, toolbar: true, weekdays: false, events: [], toolbarExtra: "" }, o);
+    this.today = this.o.date || calIso(new Date()); this.date = this.today; this.view = this.o.columns ? "day" : this.o.view; this.events = this.o.events;
+    el.addEventListener("click", (e) => this.click(e));
+    this.render(); this.scrollToNow();
+  }
+  static HOUR = 48;
+  setEvents(list) { this.events = list; this.render(); }
+  go(date = this.date, view = this.view) { this.date = date; this.view = this.o.columns ? "day" : view; this.render(); }
+  days() {
+    if (this.view === "day") return [this.date];
+    const first = calAdd(this.date, -calDate(this.date).getDay() + (this.o.weekdays ? 1 : 0));
+    return Array.from({ length: this.o.weekdays ? 5 : 7 }, (_, i) => calAdd(first, i));
+  }
+  cols() { return this.o.columns ? this.o.columns.map((c) => ({ ...c, date: this.date })) : this.days().map((d) => ({ id: d, date: d })); }
+  title() {
+    const d = calDate(this.date);
+    if (this.view === "day") return `${CAL_DAYS[d.getDay()]}, ${CAL_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    const ds = this.days(), a = calDate(ds[0]), b = calDate(ds[ds.length - 1]);
+    return a.getMonth() === b.getMonth() ? `${CAL_MONTHS[a.getMonth()]} ${a.getFullYear()}` : `${MONTHS[a.getMonth()]} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`;
+  }
+  /* Events in one column, each with its lane: overlapping events share the width */
+  placed(col) {
+    const list = this.events.filter((ev) => (ev.date || this.today) === col.date && (!this.o.columns || ev.col === col.id))
+      .map((ev) => { const s = calMin(ev.start); return { ev, s, e: ev.end != null ? calMin(ev.end) : s + (ev.dur || 30) }; })
+      .sort((a, b) => a.s - b.s || b.e - a.e);
+    let group = [], groupEnd = -1;
+    const close = () => { const n = Math.max(...group.map((x) => x.lane)) + 1; group.forEach((x) => (x.lanes = n)); group = []; };
+    for (const x of list) {
+      if (x.s >= groupEnd && group.length) close();
+      const ends = []; group.forEach((y) => { ends[y.lane] = Math.max(ends[y.lane] ?? -1, y.e); });
+      x.lane = ends.findIndex((end) => end <= x.s); if (x.lane < 0) x.lane = ends.length;
+      group.push(x); groupEnd = Math.max(groupEnd, x.e);
+    }
+    if (group.length) close();
+    return list;
+  }
+  eventHtml({ ev, s, e, lane, lanes }) {
+    const H = Calendar.HOUR, from = this.o.from * 60, top = ((s - from) / 60) * H, h = Math.max(18, ((e - s) / 60) * H - 2);
+    const time = calRange(s, e), label = [ev.title, time, ev.detail].filter(Boolean).join(", ");
+    const body = h < 30 ? `<span class="block truncate"><span class="font-medium">${esc(ev.title)}</span><span class="opacity-75">, ${time}</span></span>`
+      : `<span class="block truncate font-medium">${esc(ev.title)}</span><span class="block truncate opacity-75 tabular-nums">${time}</span>${ev.detail && h >= 54 ? `<span class="block truncate opacity-75">${esc(ev.detail)}</span>` : ""}`;
+    return `<button type="button" data-cal-event="${esc(ev.id)}" aria-label="${esc(label)}" class="${cx("absolute rounded-md border-s-[3px] px-1.5 py-0.5 text-start text-xs leading-4 overflow-hidden cursor-pointer transition-colors duration-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600/40", CAL_TONE[ev.color] || CAL_TONE.blue, ev.faded && "opacity-60", ev.cancelled && "line-through opacity-60")}"
+      style="top:${top + 1}px;height:${h}px;left:calc(${(lane / lanes) * 100}% + 2px);width:calc(${100 / lanes}% - 6px)">${body}</button>`;
+  }
+  render() {
+    const o = this.o, H = Calendar.HOUR, hours = o.to - o.from, cols = this.cols();
+    const head = (c) => { if (o.columns) return `<div class="flex flex-col justify-center min-w-0 px-2 h-14"><p class="text-sm font-medium text-gray-800 truncate">${esc(c.label)}</p>${c.sub ? `<p class="text-xs text-gray-500 truncate">${esc(c.sub)}</p>` : ""}</div>`;
+      const d = calDate(c.date), today = c.date === this.today;
+      return `<div class="flex flex-col items-center justify-center h-14 gap-0.5"><span class="text-[11px] font-medium uppercase ${today ? "text-blue-600" : "text-gray-500"}">${CAL_DAYS[d.getDay()].slice(0, 3)}</span><span class="flex items-center justify-center size-7 rounded-full text-base tabular-nums ${today ? "bg-blue-600 font-semibold text-white" : "text-gray-800"}">${d.getDate()}</span></div>`; };
+    const nowLine = (c) => { if (o.now == null || c.date !== this.today) return ""; const t = ((calMin(o.now) - o.from * 60) / 60) * H; if (t < 0 || t > hours * H) return "";
+      return `<div class="pointer-events-none absolute inset-x-0 z-[5] border-t-2 border-blue-600" style="top:${t}px" aria-hidden="true"><span class="absolute -top-[5px] -start-[5px] size-2 rounded-full bg-blue-600"></span></div>`; };
+    const tmpl = `56px repeat(${cols.length}, minmax(${o.columns ? 140 : 96}px, 1fr))`;
+    this.el.innerHTML = `${o.toolbar ? `<div class="flex items-center gap-2 h-13 px-4 border-b border-gray-200/80">
+        ${button("Today", { v: "white", s: "sm", attrs: 'data-cal="today"' })}<div class="flex">${iconButton("chevron-left", this.view === "day" ? "Previous day" : "Previous week", { s: "iconSm", attrs: 'data-cal="prev"' })}${iconButton("chevron-right", this.view === "day" ? "Next day" : "Next week", { s: "iconSm", attrs: 'data-cal="next"' })}</div>
+        <h2 class="ms-1 text-base font-semibold text-gray-800 truncate">${this.title()}</h2><span class="grow"></span>${o.toolbarExtra}
+        ${o.columns ? "" : `<div data-cal-view>${segmented(["Day", "Week"], this.view === "day" ? 0 : 1, { sm: true, attrs: 'aria-label="View"' })}</div>`}</div>` : ""}
+      <div data-cal-scroll class="overflow-auto" style="max-height:${o.height}px">
+        <div class="grid sticky top-0 z-10 bg-white border-b border-gray-200/80" style="grid-template-columns:${tmpl}"><div></div>${cols.map((c) => `<div class="border-s border-gray-200/80 min-w-0">${head(c)}</div>`).join("")}</div>
+        <div class="grid" style="grid-template-columns:${tmpl}">
+          <div class="relative" style="height:${hours * H}px">${Array.from({ length: hours - 1 }, (_, i) => `<span class="absolute end-2 -translate-y-1/2 text-[11px] text-gray-500 tabular-nums" style="top:${(i + 1) * H}px">${calClock((o.from + i + 1) * 60)}</span>`).join("")}</div>
+          ${cols.map((c) => `<div data-cal-col="${esc(c.id)}" data-date="${c.date}" class="relative border-s border-gray-200/80" style="height:${hours * H}px;background-image:linear-gradient(to bottom, rgb(229 231 235 / .8) 1px, transparent 1px);background-size:100% ${H}px">${this.placed(c).map((x) => this.eventHtml(x)).join("")}${nowLine(c)}</div>`).join("")}
+        </div></div>`;
+    icons();
+  }
+  scrollToNow() { const sc = this.el.querySelector("[data-cal-scroll]"); if (!sc || this.o.now == null) return; sc.scrollTop = Math.max(0, ((calMin(this.o.now) - this.o.from * 60) / 60) * Calendar.HOUR - 96); }
+  click(e) {
+    const nav = e.target.closest("[data-cal]");
+    if (nav) { const k = nav.dataset.cal, step = this.view === "day" ? 1 : 7; return this.go(k === "today" ? this.today : calAdd(this.date, k === "prev" ? -step : step)); }
+    const v = e.target.closest("[data-cal-view] [data-seg]"); if (v) return this.go(this.date, v.dataset.seg === "0" ? "day" : "week");
+    const evEl = e.target.closest("[data-cal-event]");
+    if (evEl) { const ev = this.events.find((x) => String(x.id) === evEl.dataset.calEvent); if (ev && this.o.onOpen) this.o.onOpen(ev, evEl); return; }
+    const col = e.target.closest("[data-cal-col]");
+    if (col && this.o.onSlot) { const y = e.clientY - col.getBoundingClientRect().top, time = this.o.from * 60 + Math.floor((y / Calendar.HOUR) * 4) * 15;
+      this.o.onSlot({ date: col.dataset.date, col: col.dataset.calCol, time }); }
+  }
+}
 
-/* Actions menu behaviour (v4): open/close, search, arrow keys, Enter, Escape, click outside */
+/* Actions menu behaviour: open/close, search, arrow keys, Enter, Escape, click outside */
 (() => {
   const btn = (am) => am.querySelector("[data-am-btn]"), menu = (am) => am.querySelector("[data-am-menu]");
   const usable = (am) => [...am.querySelectorAll("[data-am-item]")].filter((b) => !b.hidden && b.getAttribute("aria-disabled") !== "true");
@@ -953,12 +963,12 @@ const defineBlock = (b) => BLOCKS.push(Object.assign({ canvas: "gray", pad: true
   document.addEventListener("mousedown", (e) => document.querySelectorAll("[data-am]").forEach((am) => { if (!am.contains(e.target)) close(am); }));
 })();
 
-/* Global delegated behaviour for switches and segmented controls inside blocks (visual only) */
+/* Global delegated behaviour for switches and segmented controls (visual only) */
 document.addEventListener("click", (e) => {
   const s = e.target.closest('[data-act="switch"]');
   if (s) { s.setAttribute("aria-checked", s.getAttribute("aria-checked") === "true" ? "false" : "true"); Motion.settle(s.closest("[data-row], .min-h-11, li, tr") || s.parentElement); }
   const seg = e.target.closest("[data-seg]");
-  if (seg && !seg.closest("[data-state-switch]")) {
+  if (seg) {
     const wrap = seg.parentElement, sm = wrap.className.includes("h-8"), prev = wrap.querySelector('[aria-selected="true"]');
     [...wrap.children].forEach((b) => { const on = b === seg; b.className = on ? (sm ? R.segOnSm : R.segOn) : (sm ? R.segItemSm : R.segItem); b.setAttribute("aria-selected", on); });
     Motion.glide(wrap, prev, seg, "thumb");
@@ -967,18 +977,6 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("change", (e) => { const c = e.target; if (c.classList && (c.classList.contains("cbx") || c.classList.contains("rad")) && c.checked) Motion.play(c, "asha-check-pop"); });
 
-/* ============================================================ v2 shared helpers
- * Built for the v2 blocks (they're plain functions, so v1 blocks are untouched). */
-if (V2) {
-  sysChange("Data grid", "A column can list its normal values (\"Active\", \"Signed\", \"$0.00\"); those cells are left blank so the unusual rows stand out (Attio shows status only when it's the exception).");
-  sysChange("Data grid", "The default sort isn't shown as a removable \"Sorted by\" chip; the header arrow already shows it. A chip appears once you change the sort.");
-  sysChange("Data grid", "Pages with count tabs drop the toolbar's \"Title · count\" button, which repeated the tab right above it.");
-  sysChange("Data grid", "An empty list's bottom line now runs edge to edge (it stopped 16px short on both sides).");
-  sysChange("Tables", "Every hand-built table renders as the data grid in the presentation that fits where it sits (page, section, panel, form).");
-  sysChange("Avatars", "People avatars are grey and practice or payer marks are outlined grey: six tints and saturated logos competed with the blue (act) and orange (fix) that carry meaning.");
-}
-/* One money vocabulary for column headers and labels */
-const MONEY_LABEL = { billed: "Billed", allowed: "Allowed", writeOff: "Write-off", insEst: "Ins. est.", insPaid: "Ins. paid", ptEst: "Pt. est.", ptResp: "Pt. resp.", balance: "Balance" };
 /* Joined date stepper: one bordered group, ‹ label ›, like Preline's inline button group */
 const dateStepper = (label, { prev = "Previous", next = "Next" } = {}) => `<div class="inline-flex h-8 shrink-0 items-stretch overflow-hidden rounded-lg border border-gray-200 bg-white text-sm text-gray-800 shadow-2xs divide-x divide-gray-200">
   <button type="button" class="px-2 text-gray-500 hover:bg-gray-50" aria-label="${esc(prev)}">${I("chevron-left", "size-4")}</button>
@@ -988,7 +986,6 @@ const dateStepper = (label, { prev = "Previous", next = "Next" } = {}) => `<div 
 const stepBar = (items, cur = 0, { cls = "px-5 py-2 border-b border-gray-200/80" } = {}) => `<nav data-steps class="flex items-center gap-1 overflow-x-auto ${cls}" aria-label="Steps">${items.map(([label, st], i) => {
   const on = i === cur;
   const mark = st === "done" ? `<span class="flex size-5 items-center justify-center rounded-full bg-blue-600 text-white">${I("check", "size-3")}</span>`
-    : st === "problem" && !V4 ? I("circle-alert", "size-5 text-orange-500")
     : `<span class="flex size-5 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums ${on ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}">${i + 1}</span>`;
   return `${i ? '<span class="w-4 shrink-0 border-t border-gray-300" aria-hidden="true"></span>' : ""}<button type="button" data-step="${i}" class="inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-2 text-sm ${on ? "bg-gray-100 font-medium text-gray-900" : "text-gray-600 hover:bg-gray-50"}" ${on ? 'aria-current="step"' : ""}>${mark}${label}</button>`;
 }).join("")}</nav>`;
@@ -1000,9 +997,9 @@ const kvTable = (pairs, { cols = 1 } = {}) => {
 };
 /* A money breakdown as a full-width table: one amount column on the right edge, the total under one line */
 const moneySteps = (rows, total) => `<div class="${R.tableBox}"><table class="w-full border-separate border-spacing-0 text-[13px]"><tbody>${rows.map(([l, a, why]) => `<tr><td class="h-9 px-3 border-b border-gray-200/80 text-gray-700">${l}${why ? ` <span class="text-gray-400">· ${why}</span>` : ""}</td><td class="h-9 px-3 border-b border-gray-200/80 text-end tabular-nums text-gray-800">${money(a)}</td></tr>`).join("")}</tbody>${total ? `<tfoot><tr><td class="h-9 px-3 font-medium text-gray-800">${total[0]}</td><td class="h-9 px-3 text-end tabular-nums font-semibold text-gray-900">${money(total[1])}</td></tr></tfoot>` : ""}</table></div>`;
-/* Hover labels for icon-only marks, such as the status icons on appointment cards: give the element data-tip="Label".
+/* Hover labels for icon-only marks, such as the status icons on calendar events: give the element data-tip="Label".
  * One shared tooltip lives on <body>, so a card's overflow never clips it. It shows on hover and on keyboard focus;
- * focusing a control that holds marks (an appointment card) shows all their labels beside them. */
+ * focusing a control that holds marks (a calendar event) shows all their labels beside them. */
 (() => {
   let tip = null, on = null, byFocus = false;
   const hide = () => { if (tip) tip.style.display = "none"; on = null; byFocus = false; };

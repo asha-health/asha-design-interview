@@ -20,13 +20,8 @@ question into a few options they can switch between. When they pick an option, t
 step by step, right on the screen. They pick, write a comment, and you build the next round from what they
 said.
 
-There are two places to start from. `prototypes/appointment-flow/` (at the repo root) is a small starter: the day
-schedule from the library, clickable appointment cards, invented check-in and check-out data and a save-ready
-`serve.py`, with no questions yet. The worked example is in
-[references/procedures-prototype](references/procedures-prototype/README.md): the bulk-procedures round from October
-2026, with the full frame (floating question panel, walkthrough player, picks). It had nine questions about planning, completing and billing work
-on the chart. Open it before you start; most of what's below came from building it and watching the owner
-use it.
+Start from `prototypes/calendar/` (at the repo root): a small starter with the library's calendar, clickable
+events and a save-ready `serve.py`, with no questions yet. You build the question panel and walkthrough player.
 
 `asha-design-experimentation` is still the right tool when the question is only how something looks and
 pictures side by side settle it. Reach for a prototype when the question is how something *behaves*: what
@@ -129,14 +124,11 @@ The owner caught these by using it. Most of them will apply to your screen too, 
 
 Collect the open questions from wherever they live (a decision deck, review notes, the chat), and cut any
 that pictures already settle. Each question needs real alternatives and someone's day riding on it. Then
-look at the screen they're about (in this repo, the closest blocks in `docs/design-system/index.html`, and the
-real labels in `docs/design-system/INVENTORY.md`) and note exactly what's where. Write both down in chat, briefly, before you build.
+look at the screen they're about (in this repo, the closest components in `docs/design-system/index.html`) and note exactly what's where. Write both down in chat, briefly, before you build.
 
 ### 2. Build the page
 
-Start from `prototypes/appointment-flow/` for a schedule-based screen, or copy `references/procedures-prototype`
-for its complete frame (the floating panel, the walkthrough player, saving picks, the build script) and replace the
-screen and the questions. Borrowing the reference's panel and walkthrough player into the starter works well.
+Start from `prototypes/calendar/` and add the floating question panel, the walkthrough player and saving picks.
 
 - **Data file.** The questions (each with options, today first, one `rec`), the scenarios (each with plain
   steps and the questions it's for), and the already-decided list. Invent every name and number; no real

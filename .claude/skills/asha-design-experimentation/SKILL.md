@@ -36,12 +36,8 @@ Before you draw:
 
 - **Read the guide, then open the preview.** Read
   [Asha UI's design-system guide](../asha-ui/references/design-system.md), starting with
-  its principles, then open the preview and click through it. It opens on v4, the
-  version we follow; turn on "Highlight changes" to see what v4 changed and why. The blocks live in
-  `docs/design-system/blocks/` (shell, schedule, clinical, patients, billing, claims,
-  revenue, tasks, comms, forms, settings, AI and states), the exact styles are the
-  recipes in `docs/design-system/src/kit.js`, and the real screen labels are in
-  `INVENTORY.md`.
+  its principles, then open the preview and click through it. The exact styles are the
+  recipes in `docs/design-system/src/kit.js`.
 - **Look across the whole library, not just the closest block.** The blocks aren't
   only a style sheet; they're full of ideas you can borrow: a "Needs you" box at
   the top, a phone preview for texts, setup steps with progress, a timeline for
@@ -51,12 +47,12 @@ Before you draw:
 While you draw:
 
 - **Draw with the library's own code.** Don't redraw blocks by hand. Build your page
-  by pulling in the library's `kit.js`, `data.js` and the block files you need, the
-  way `prototypes/appointment-flow/build.py` does, so every
+  by pulling in the library's `kit.js`, the
+  way `prototypes/calendar/build.py` does, so every
   picture uses the real recipes and the real data grid. When the screen already has a
   block, draw today's option straight from that block.
 - **Hold every option up to the principles** at the top of the guide, and to the UX
-  principles in `docs/design-system/ux-principles/README.md`, before it goes on a slide. They are how we decide what earns the main
+  principles in `.claude/skills/asha-ui/references/ux-principles.md`, before it goes on a slide. They are how we decide what earns the main
   surface, how loud an alert should be, when to reuse a shared piece, and more. If an
   option breaks one on purpose, say so in its catch.
 - **Copy, don't approximate.** Lift the classes and structure from the block and
@@ -184,7 +180,7 @@ These were all on earlier pages and the user found them clutter:
 ## 5. Build The Mock
 
 One self-contained HTML file in `prototypes/<name>/`, built from the library's
-`kit.js`, `data.js` and blocks (see `prototypes/appointment-flow/build.py`). Invent every name and
+`kit.js` (see `prototypes/calendar/build.py`). Invent every name and
 number; never use real patient data.
 
 - **Use Preline for inspiration.** Before drawing a slide, look up the closest

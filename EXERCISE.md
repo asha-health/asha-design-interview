@@ -22,13 +22,13 @@ Design how these three moments should work, as a clickable prototype built on As
 - **The check-in flow** that starts from it.
 - **The check-out flow** that starts from it.
 
-Today's design for all three is in the library (`docs/design-system/index.html`, Schedule and Billing groups), and the
-starter shows it under "Today's panel". You can improve it or start over; either way, tell us why.
+The starter is a plain calendar built from Asha's design system (`docs/design-system/index.html`). Turn it into the
+day schedule and design the rest; tell us why you made the choices you made.
 
 We care most about:
 
-- **The front desk's real day.** Fast for the common case, no dead ends for the messy ones. Use the scenarios in the
-  starter's menu: premedication, unsigned forms, a walk-in with no insurance, a family balance, a declined card.
+- **The front desk's real day.** Fast for the common case, no dead ends for the messy ones. Design for these scenarios:
+  premedication, unsigned forms, a walk-in with no insurance, a family balance, a declined card.
 - **Judgment.** What goes on the main surface, what's one click away, and what you left out.
 - **Fit.** It should look like it came out of the design system: its components, its density, its rules.
 - **How you work with Claude Code.** Use the skills in `.claude/skills/`, steer it, check what it produces.
@@ -36,13 +36,13 @@ We care most about:
 ## How to start
 
 ```bash
-cd prototypes/appointment-flow
+cd prototypes/calendar
 python3 build.py && python3 serve.py 18791 .     # then open http://127.0.0.1:18791/
 ```
 
-The starter draws the real day schedule. "Your design" opens `yourFlyout()` in `src/proto-app.js`, which only lists
-the visit's raw data; that's where your design goes. The data for each visit is described at the top of
-`src/proto-data.js`; add to it whatever your design needs. Read `.claude/skills/asha-prototype/SKILL.md` for how we
+The starter draws a week of invented events. Clicking one opens `yourPanel()` in `src/proto-app.js`, which only lists
+the event's raw data; that's where your design goes. The events are in `src/proto-data.js`; replace them with the
+appointments, patients and visit data your design needs (all invented). Read `.claude/skills/asha-prototype/SKILL.md` for how we
 build prototypes (one screen, scenarios, design questions with options you can play).
 
 ## What to bring back

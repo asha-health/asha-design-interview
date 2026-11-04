@@ -5,20 +5,14 @@ primitives and feature components. Where older guidance, tokens or components di
 for any UI you create or touch.
 
 - **Library:** `docs/design-system/index.html`. Open it in a browser; it is one self-contained file. It shows the
-  foundations, the components and 93 working blocks of real Asha screens in 13 areas, each with its states (normal,
-  empty, loading, error, busy).
-- **Recipes:** the `R` object in `docs/design-system/src/kit.js` holds every class recipe by name. The library's
-  "Build list" page prints them. The kit's helpers (`psec`, `metaGrid`, `infoRow`, `alertMark`, `condChip`,
-  `Grid`, `Sheet`, `Motion`, `toast`) are the reference behaviour for the matching `asha-ui` primitives.
-- **Real screens:** `docs/design-system/INVENTORY.md` records the real labels, columns and statuses each block uses.
-- **Which version:** the library opens on **v4**, the version to follow (since 2026-10-01). The switch at the top of
-  its sidebar still shows v1 and v2 if you want to see where something came from, and **Highlight changes** outlines
-  everything v4 changed with a note saying why. The written rules are in `docs/design-system/BLOCKS-GUIDE.md` under
-  "v4 rules", and the library's Overview page lists them too.
+  rules every screen follows (Overview), the foundations and the components, including the data grid and a plain
+  calendar.
+- **Recipes:** the `R` object in `docs/design-system/src/kit.js` holds every class recipe by name. The kit's helpers
+  (`psec`, `metaGrid`, `infoRow`, `alertMark`, `condChip`, `Grid`, `Calendar`, `Sheet`, `Motion`, `toast`) are the reference behaviour for the matching `asha-ui` primitives.
 
 ## 0. The principles (read these first)
 
-These came out of the owner reviewing every block, and they matter more than any single size or colour below. If a
+These came out of the owner reviewing every screen, and they matter more than any single size or colour below. If a
 screen you're building breaks one of them, fix the screen, not the principle.
 
 - **Most important first, the rest on demand.** Work out the job people do most often on this screen and show only
@@ -118,13 +112,8 @@ screen you're building breaks one of them, fix the screen, not the principle.
 | Empty, loading, error | Keep the frame and the header. Loading shows grey bars where values will go. Empty is four quiet lines ending in the next action; never "All caught up!". An error says what failed and offers Try again. |
 | AI thinking | The live step is a shimmering phrase with three dots, a pinging ring and a soft blue wash. Finished steps get a check and their time. The steps collapse to "Checked N things · Ns ›" when the answer arrives. Blue only. |
 
-## 4. Blocks (Layer 3: feature components)
+## 4. Screens (Layer 3: feature components)
 
-Before building or restyling a screen, open the matching group in the library and follow its block.
-
-- **Groups:** App shell · Schedule · Patients · Charting & treatment · Billing & payments · Insurance & claims ·
-  Revenue intelligence · Tasks & lists · Messages & reminders · Forms & documents · Settings · Asha AI · States &
-  overlays.
 - **Full screens** start with the 44px one-line `AshaWorkspaceHeader` and underline tabs with counts. Dates go in
   the tab bar's right slot. There are no summary tiles above lists.
 - **Reuse:** related surfaces reuse the same grid, spreadsheet and panel components. For example, Claims, EOBs,
@@ -135,7 +124,6 @@ Before building or restyling a screen, open the matching group in the library an
 ## 5. Words
 
 - Write for a dental office manager: plain, sentence case, units next to numbers.
-- Use the real labels from `INVENTORY.md`.
 - No jargon, no emojis and no "AI-powered".
 - Every setting has a plain (i) explanation.
 
@@ -150,8 +138,8 @@ it yet. Some examples:
 
 The production code catches up gradually.
 
-We're actively moving all three layers (tokens, `asha-ui` primitives and feature components) toward v4 and its
-principles. So whenever you touch UI, look at the v4 block for that screen and ask how close the real screen is: the
+We're actively moving all three layers (tokens, `asha-ui` primitives and feature components) toward this system and its
+principles. So whenever you touch UI, ask how close the real screen is to the system: the
 data grid with typed cells, the shared record and patient headers, the Actions menu, no patchy columns, compact
 tables in panels, details on hover. Close the gap at the shared piece when it's in scope, and write the rest down in
 the adoption plan.
@@ -166,8 +154,8 @@ the adoption plan.
 - **Keep changes app-wide changes visible.** Token and size changes shift every screen. Ship them in their own
   small PR with a before-and-after browser check of the busiest screens: Claims, Schedule, patient chart, ledger
   and Settings.
-- **Keep the library up to date.** When a real screen settles on a pattern the library lacks, add or update its
-  block (`docs/design-system/BLOCKS-GUIDE.md`) so the library stays the source of truth.
+- **Keep the library up to date.** When a real screen settles on a pattern the library lacks, add it to the
+  library so the library stays the source of truth.
 
 ## Choose the information order before the layout
 
